@@ -1,0 +1,8 @@
+.build
+.tmp
+.project*
+deploy
+proxy/certs
+notes
+site/gmack.nz/*/hold*
+
