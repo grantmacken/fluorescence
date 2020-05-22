@@ -21,7 +21,7 @@ jobs:
       run: |
           source .env
           echo '::set-env name=TERM::xterm'
-    - name: Pull in docker images
+    - name: Pull in my docker images
       run: |
           source .env
           source .version.env
