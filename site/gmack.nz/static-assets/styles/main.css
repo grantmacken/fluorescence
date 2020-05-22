@@ -1,0 +1,254 @@
+
+/* #d8d8d8 #e0e0e0 #cad4db  #d5dadd #d7b9b9 */
+
+/* #32392d */
+
+/* hue  0-360 color wheel 
+ * just above 0 or below 360 are reds,
+ * around 120 greens
+ * around 240 blues
+ *
+ * lightness
+ *  - dark 100% light 0%
+ * */
+
+:root {
+  --txt-h: 206;
+  --txt-s: 15%;
+  --txt-l: 79%;
+  --txt-l-lighter: 50%;
+  --txt-a: 1;     /* alpha transparance */
+  --clr-hsl: hsl( var(--txt-h),var(--txt-s),var(--txt-l)); /* #1d3a05; */
+
+  --bg-h: 95;
+  --bg-s: 12%;
+  --bg-l: 20%;
+  --bg-l-darker: 50%;
+  --bg-a: 1;
+  --bg-hsl: hsl( var(--bg-h),var(--bg-s),var(--bg-l)); /* #1d3a05; */
+
+  --link-h: 204;
+  --link-s: 35%;
+  --link-l: 73%;
+  --link: hsl( var(--link-h),var(--link-s),var(--link-l),.75); /* #a1bed2 #1d3a05; */
+  --link-alt: hsla( var(--link-h),var(--link-s),var(--link-l),1); /* #a1bed2 #1d3a05; */
+
+  --alt-h: 0;
+  --alt-s: 91%;
+  --alt-l: 25%;
+  --alt-l-darker: 20%;
+  --alt: hsla(var(--alt-h),var(--alt-s),var(--alt-l),.5); /* #1d3a05; */
+  --bg-alt: hsla(var(--alt-h),var(--alt-s),var(--alt-l-darker),1); /* #1d3a05; */
+  --bg-url: '/icons/mackenzie';
+  /* font-size: min(max(1rem, calc(1rem + ((1vw - 0.48rem) * 0.6944))), 1.5rem); */
+  /* min-height: 0vw; */
+}
+
+* {
+  border: 0;
+  margin: 0;
+  padding: 0;
+  box-sizing: border-box;
+  outline-offset: 0.125em;
+  text-decoration: none;
+  vertical-align: baseline;
+}
+
+* + * {
+ magin-top: 1.5em;
+}
+
+html {
+  height: 100%;
+  border-collapse: collapse;
+}
+
+body {
+  margin-top: 0;
+  display: flex;
+  height: 100vh;
+  flex-direction: column;
+  flex-wrap: nowrap;
+  width: 100%;
+  color: var(--clr-hsl);
+  background-color: var(--bg-hsl); /* #c1cad1 */
+  font-size: 1.25rem;
+}
+
+
+
+header {
+  margin-top: 0;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  /* color: var( --clr-comlementary ); */
+  min-height: 10vh;
+  font-size: 2.25rem;
+}
+
+nav[aria-label=Breadcrumb] {
+  margin-top: 0;
+  /* display: block; */
+  display: flex;
+  background-color: var(--alt); /* #1f3d06 *1/ */
+  /* width: 100%; */
+  /* padding-right: 1rem; */
+  justify-content: flex-end;
+}
+
+.breadcrumb {
+  display: flex;  
+  align-items: center;
+  padding-right: 1rem;
+  font-size: smaller;
+}
+
+.breadcrumb a:hover {
+  background-color: var(--bg-alt);
+  color: var(--link-alt);
+  text-decoration: underline;
+}
+
+
+.breadcrumb li::before {
+    content: "→ ";
+    margin-left: .25em;
+}
+
+.breadcrumb li:first-child::before {
+    content: " ";
+}
+
+
+main {
+  flex-grow: 1;
+  flex-shrink: 0;
+  display: flex;
+  flex-wrap: wrap;
+  --modifier: calc(60rem - 100%);
+
+}
+
+/**
+ * for each item in main
+ * display hozizontally if more than 60 rem
+ *
+ *
+**/
+main > * {
+  max-width: 100%;
+  flex-grow: 1;
+  flex-basis: calc(var(--modifier) * 999);
+}
+
+main > article {
+  /* background-color: hsla(204, 25%, 80%, .9); /1* #c0cfd9 *1/ */
+  min-width: 75%;
+}
+
+
+
+main > aside {
+  background-image: url( '/icons/mackenzie' );
+ /* background-color: hsla(204, 25%, 80%, .7);  #c0cfd9 */
+  margin-top: 0;
+  min-width: 25%;
+  padding-right: 1rem;
+  padding-left: 1rem;
+  border-left: 1rem var(--alt) solid;
+}
+
+main > article > * {
+  display: block;
+  max-width: 75%;
+  margin-left: auto;
+  margin-right: auto;
+}
+
+footer {
+  border-top: 1px var(--alt) solid;
+  padding-top: 1rem; 
+  display: box;
+  clear: both;
+}
+
+/* BLOCK TYPOGRAPHY */
+
+article + * {
+ margin-top: 1.5em;
+}
+
+/* BLOCK TYPOGRAPHY */
+
+h1,
+h2,
+h3,
+{
+  font-weight: 600;
+  /* color: #771903; */
+}
+
+h1,
+h2 {
+ padding-bottom: .3em;
+ /* border-bottom: 1px solid #484d17; */
+}
+
+h1 {
+  margin: 0.67em 0;
+  font-size: 2.25rem;
+  line-height: 1.2;
+}
+
+h2 {
+  font-size: 1.75em;
+  line-height: 1.225;
+}
+
+h3 {
+  font-size: 1.5em;
+  line-height: 1.43;
+  /* color: #6a737d; */
+}
+
+/* BLOCK TYPOGRAPHY */
+
+a {
+  display: inline-block;
+  color: var(--link);
+  background-color: transparent;
+  /* border-radius: 0.25em; */
+  text-decoration: none;
+}
+
+li {
+    list-style: none;
+}
+
+li a {
+  display: inline;
+  color: var(--link);
+}
+
+.vertical_list li a:link,
+.vertical_list li a:visited {
+  /* display: block; */
+  padding-left: 20px;
+  padding-right: 20px;
+  margin-right: 5px;
+  text-decoration: none;
+  border-right: solid 2px var(--link-alt);
+  border-bottom: solid 1px var(--link-alt);
+}
+
+.vertical_list li a:hover {
+  padding-left: 10px;
+  border-left: solid 10px var(--link-alt);
+  border-right: solid 2px var(--link);
+  border-bottom: solid 1px var(--link);
+}
+
+span[aria-current=page] {
+}
+
