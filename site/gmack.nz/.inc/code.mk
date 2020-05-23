@@ -9,7 +9,7 @@ CodeBuildList  := $(patsubst %,$(B)/code/%.xqm,$(ModuleList))
 compile =  $(ESCRIPT) bin/scripts/compile.escript ./code/src/$1
 
 PHONY: code
-code: $(D)/xqerl-compiled-code.tar #(D)/xqerl-compiled-code.tar
+code: $(D)/xqerl-compiled-code.tar
 
 PHONY: clean-code
 clean-code:
@@ -21,10 +21,10 @@ clean-code:
 
 $(D)/xqerl-compiled-code.tar: $(CodeBuildList)
 	@mkdir -p $(dir $@)
-	@$(MAKE) check-routes
+	@# $(MAKE) check-routes
 	@docker run --rm \
  --mount $(MountCode) \
- --entrypoint "tar" $(XQERL_DOCKER_IMAGE) -czf - $(XQERL_HOME)/code &>/dev/null > $@
+ --entrypoint "tar" $(XQERL_IMAGE) -czf - $(XQERL_HOME)/code &>/dev/null > $@
 	$(call Tick, '- [ $(basename $(notdir $@)) ] tarred ')
 	@echo;printf %60s | tr ' ' '-' && echo
 
@@ -48,19 +48,37 @@ $(T)/compile_result/%.txt: code/%.xqm
 	@# check: routes do not return 500 status
 	@# $(MAKE) -silent routes 
 
-.PHONY: check-routes
-check-routes: home-page
+.PHONY: check-xq-routes
+check-xq-routes: home-page
+
+.PHONY: check-xq-routes-more
+check-xq-routes-more: home-page-more
 
 .PHONY: clean-routes
 clean-routes:
-	@rm -f $(R)/routes/*
+	@rm -f $(T)/check_route/*
 
 .PHONY: home-page
-home-page: $(R)/routes/home-page
+home-page: $(T)/check_route/home-page
+	@mkdir -p $(dir $@)
 	@echo 'check route [ $@ ]'
 	@$(call ServesHeader,$(dir $<)/headers-$(notdir $<),HTTP/1.1 200, - status OK!)
 	@$(call HasHeaderKeyShowValue,$(dir $<)/headers-$(notdir $<),content-type)
 
-$(R)/routes/home-page:
+.PHONY: home-page-more
+home-page-more: $(T)/check_route/home-page
+	@mkdir -p $(dir $@)
+	@echo 'check route [ $@ ]'
+	@echo;printf %60s | tr ' ' '-' && echo
+	@cat $<
+	@echo;printf %60s | tr ' ' '-' && echo
+	@cat $(dir $<)/headers-$(notdir $<)
+	@echo;printf %60s | tr ' ' '-' && echo
+	@cat $(dir $<)/doc-$(notdir $<)
+	@echo;printf %60s | tr ' ' '-' && echo
+	@$(call ServesHeader,$(dir $<)/headers-$(notdir $<),HTTP/1.1 200, - status OK!)
+	@$(call HasHeaderKeyShowValue,$(dir $<)/headers-$(notdir $<),content-type)
+
+$(T)/check_route/home-page:
 	@mkdir -p $(dir $@)
 	@$(call GET,/,$@)

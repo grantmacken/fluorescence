@@ -1,8 +1,4 @@
 
-/* #d8d8d8 #e0e0e0 #cad4db  #d5dadd #d7b9b9 */
-
-/* #32392d */
-
 /* hue  0-360 color wheel 
  * just above 0 or below 360 are reds,
  * around 120 greens
@@ -40,27 +36,37 @@
   --alt: hsla(var(--alt-h),var(--alt-s),var(--alt-l),.5); /* #1d3a05; */
   --bg-alt: hsla(var(--alt-h),var(--alt-s),var(--alt-l-darker),1); /* #1d3a05; */
   --bg-url: '/icons/mackenzie';
-  /* font-size: min(max(1rem, calc(1rem + ((1vw - 0.48rem) * 0.6944))), 1.5rem); */
+  --font-size: min(max(1rem, calc(1rem + ((1vw - 0.48rem) * 0.6944))), 1.5rem);
   /* min-height: 0vw; */
-}
+ }
 
 * {
   border: 0;
   margin: 0;
   padding: 0;
   box-sizing: border-box;
-  outline-offset: 0.125em;
-  text-decoration: none;
-  vertical-align: baseline;
+  /* outline-offset: 0.125em; */
+  /* text-decoration: none; */
+  /* vertical-align: baseline; */
+  font-family: inherit;
+  line-height: inherit;
+  color: inherit;
 }
 
 * + * {
- magin-top: 1.5em;
+ margin-top: 1.5em;
 }
 
 html {
   height: 100%;
   border-collapse: collapse;
+  font-size: 125%;
+  font-family: sans-serif;
+  line-height: 1.5;
+  color: #222;
+  background-color: var(--bg-hsl); /* #c1cad1 */
+  font-size: 125%;
+  color: var(--clr-hsl);
 }
 
 body {
@@ -70,12 +76,8 @@ body {
   flex-direction: column;
   flex-wrap: nowrap;
   width: 100%;
-  color: var(--clr-hsl);
-  background-color: var(--bg-hsl); /* #c1cad1 */
-  font-size: 1.25rem;
+
 }
-
-
 
 header {
   margin-top: 0;
@@ -167,10 +169,12 @@ main > article > * {
 }
 
 footer {
-  border-top: 1px var(--alt) solid;
-  padding-top: 1rem; 
-  display: box;
-  clear: both;
+  margin-top: 0;
+  font-size: smaller;
+  /* display: block; */
+  display: flex;
+  background-color: var(--alt); /* #1f3d06 *1/ */
+  justify-content: center;
 }
 
 /* BLOCK TYPOGRAPHY */
@@ -212,17 +216,25 @@ h3 {
   /* color: #6a737d; */
 }
 
-/* BLOCK TYPOGRAPHY */
+p {
+  line-height: 1.5em;
+}
+
+p + p {
+/* margin-top: 0; */
+text-indent: .5em;
+}
+
+/* LISTS TYPOGRAPHY */
 
 a {
-  display: inline-block;
+  /* display: inline-block; */
   color: var(--link);
-  background-color: transparent;
   /* border-radius: 0.25em; */
   text-decoration: none;
 }
 
-li {
+li { 
     list-style: none;
 }
 

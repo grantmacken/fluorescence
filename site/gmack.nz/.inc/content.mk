@@ -4,8 +4,12 @@
 ifeq ($(origin TITLE),undefined)
  TITLE := $(EMPTY)
 endif
+ifeq ($(origin INDEX),undefined)
+ INDEX := $(EMPTY)
+endif
 
-BuildContentList := $(patsubst %.md,$(B)/%.json,$(wildcard content/*/*.md))
+BindMountDeploy  := type=bind,target=/tmp,source=$(abspath ../../deploy)
+BuildContentList := $(patsubst %.md,$(B)/%.json,$(wildcard content/*.md))
 
 .PHONY: content
 content: $(D)/xqerl-database.tar
@@ -14,9 +18,16 @@ $(D)/xqerl-database.tar: $(BuildContentList)
 	@# echo '## $(notdir $@) ##'
 	@docker run --rm \
  --mount $(MountData) \
- --entrypoint "tar" $(XQERL_DOCKER_IMAGE) -czf - $(XQERL_HOME)/data &>/dev/null > $@
+ --entrypoint "tar" $(XQERL_IMAGE) -czf - $(XQERL_HOME)/data &>/dev/null > $@
 	@#echo;printf %60s | tr ' ' '-' && echo
 #$(P)/home/index.txt
+
+.PHONY: db-tar-deploy
+db-tar-deploy:
+	docker run --rm \
+ --mount $(MountData) \
+ --mount $(BindMountDeploy) \
+ --entrypoint "tar" $(XQERL_IMAGE) xvf /tmp/xqerl-database.tar -C /
 
 .PHONY: clean-content
 clean-content:
@@ -24,8 +35,6 @@ clean-content:
 	@rm -fv $(wildcard $(B)/content/*/*)
 	@rm -fv $(wildcard $(T)/content/*/*)
 	@rm -f $(D)/xqerl-database.tar
-
-slug != echo "content/articles/$(shell date --iso)-$(shell echo $(TITLE) | sed 's/ /-/g').md"
 
 xxxx/content/%.html:
 	@[ -d $(dir $@) ] || mkdir -p $(dir $@)
@@ -58,21 +67,25 @@ $(T)/content/%.xml: content/%.md
 	@#echo "##[ $(notdir $@) ]##"
 	@cmark --to xml $< > $@
 
+
+
 #########################################
+slug != echo "content/$(shell date --iso)-$(shell echo $(TITLE) | sed 's/ /-/g').md"
 
-.PHONY: new-home-page
-new-home-page:
-	@$(file > content/index.md,<!--{)
-	@$(file >> content/index.md,"title" : "My Home Page"$(COMMA))
-	@$(file >> content/index.md,"collection" : "home"$(COMMA))
-	@$(file >> content/index.md,"index" : "yep")
-	@$(file >> content/index.md,}-->)
-	@$(file >> content/index.md,# My Home Page Title )
-	@$(file >> content/index.md,)
-	@$(file >> content/index.md,My first sentence.)
+.PHONY: new-index-page
+new-index-page:
+	@$(if $(INDEX),, echo "usage: make INDEX='home':  you need to add INDEX" && false)
+	@mkdir -p content/$(INDEX)
+	@$(file > content/$(INDEX)/index.md,<!--{)
+	@$(file >> content/$(INDEX)/index.md,"title" : "My Index Page"$(COMMA))
+	@$(file >> content/$(INDEX)/index.md,"collection" : "$(INDEX)"$(COMMA))
+	@$(file >> content/$(INDEX)/index.md,"index" : "yep")
+	@$(file >> content/$(INDEX)/index.md,}-->)
+	@$(file >> content/$(INDEX)/index.md,)
+	@$(file >> content/$(INDEX)/index.md,My first sentence.)
 
-.PHONY: new-article
-new-article:
+.PHONY: new-page
+new-page:
 	@$(if $(TITLE),, echo "usage: make TITLE='my title':  you need to add TITLE" && false)
 	@mkdir -p articles
 	@$(file > $(slug),<!--{)

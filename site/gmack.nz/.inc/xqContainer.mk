@@ -3,9 +3,6 @@
 ### XQERL UP DOWN ##
 ####################
 
-
-xqRunning != docker ps --all --filter name=$(XQ) --format '{{.Status}}' | grep -oP '^Up' || true
-
 define xqRun
  docker run --rm  \
  --mount $(MountCode) \
@@ -16,30 +13,30 @@ define xqRun
  --network $(NETWORK) \
  --publish $(XQERL_PORT):$(XQERL_PORT) \
  --detach \
- $(XQERL_DOCKER_IMAGE)
+ $(XQERL_IMAGE)
 endef
 
-.PHONY: clean-run
-clean-run:
-	rm -fv $(T)/xq-run/*
+.PHONY: clean-xq-run
+clean-xq-run:
+	rm -f $(T)/xq-run/*
 
-.PHONY: up
-up: $(T)/xq-run/network.check $(T)/xq-run/volumes.check $(T)/xq-run/xqerl-up.check
+.PHONY: xq-up
+xq-up: $(T)/xq-run/network.check $(T)/xq-run/volumes.check $(T)/xq-run/xqerl-up.check
 
-.PHONY: down
-down: clean-run
-	@$(if $(xqRunning),echo -n ' - stopping container: ' && docker stop $(XQ),)
+.PHONY: xq-down
+xq-down: clean-xq-run
+	@$(if $(call containerRunning,$(XQ)),echo -n ' - stopping container: ' && docker stop $(XQ),)
 
 $(T)/xq-run/xqerl-up.check:
 	@mkdir -p $(dir $@)
 	@docker ps --all --filter name=$(XQ) --format '{{.Status}}' &> $@
-	@if ! grep -oP '^Up(.+)$$' $@ &>/dev/null ; then $(xqRun) \
- && sleep 2 \
- && docker ps --all --filter name=$(XQ) --format '{{.Status}}' &> $@ ; fi
-	@@if grep -oP '^Up(.+)$$' $@ &>/dev/null ;then\
- $(call Tick, - xqerl: [ $$(tail -1 $@) ]); else \
- $(call Cross,- xqerl: [ down ]) && false; fi
-	@$(MAKE) -silent info
+	@if ! grep -oP '^Up(.+)$$' $@ &>/dev/null ; then 
+	$(xqRun) && sleep 2 && docker ps --all --filter name=$(XQ) --format '{{.Status}}' &> $@
+	fi
+	@$(if $(call containerRunning,$(XQ)),\
+ $(call Tick, - xqerl: [ $$(tail -1 $@) ]),\
+ $(call Cross,- xqerl: [ down ]))
+	echo
 
 $(T)/xq-run/network.check:
 	@mkdir -p $(dir $@)
@@ -47,9 +44,6 @@ $(T)/xq-run/network.check:
 	@grep -oP '^$(NETWORK)' $@ &>/dev/null || docker network create $(NETWORK)
 	@$(call Tick, - network: [ $(NETWORK) ]) 
 	@echo
-
-MustHaveVolume = docker volume list --format "{{.Name}}" | \
- grep -q $(1) || docker volume create --driver local --name $(1) &>/dev/null
 
 $(T)/xq-run/volumes.check:
 	@mkdir -p $(dir $@)
@@ -63,21 +57,8 @@ $(T)/xq-run/volumes.check:
 	@$(call Tick, - volumes OK!)
 	@echo
 
-# secrets:  $(T)/secrets.loaded
-
-#  $(T)/secrets.loaded: $(T)/has.secrets
-# 	@# secrets are below the gitrepo so secrets are not under git control
-# 	@grep true $< || docker cp ../../../secrets.xml $(XQ):$(XQERL_HOME)/code/src
-# 	@grep true $< || $(EVAL) 'xqldb_dml:insert_doc("http://$(XQ)/secrets.xml","./code/src/secrets.xml").'
-# 	@grep true $< || docker exec $(XQ) rm ./code/src/secrets.xml 
-# 	@$(EVAL) 'xqerl:run("doc-available(\"http://$(XQ)/secrets.xml\")").' > $@
-
-
-# $(T)/has.secrets:
-# 	@$(EVAL) 'xqerl:run("doc-available(\"http://$(XQ)/secrets.xml\")").' > $@
-
-.PHONY: info
-info:
+.PHONY: xq-info
+xq-info:
 	@echo '## $@ ##'
 	@docker ps --filter name=$(XQ) --format ' -    name: {{.Names}}'
 	@docker ps --filter name=$(XQ) --format ' -  status: {{.Status}}'
@@ -86,6 +67,8 @@ info:
 	@echo -n '- IP address: '
 	@docker inspect --format='{{range .NetworkSettings.Networks}}{{.IPAddress}}{{end}}' $(XQ)
 	@echo;printf %60s | tr ' ' '-' && echo
+
+xq-info-more:
 	@echo -n '- working dir: '
 	@$(EVAL) '{ok,CWD}=file:get_cwd(),list_to_atom(CWD).'
 	@echo -n '-        node: '
@@ -96,4 +79,5 @@ info:
 	@echo -n '-        host: '
 	@$(EVAL) '{ok, HOSTNAME } = net:gethostname(),list_to_atom(HOSTNAME).'
 	@echo;printf %60s | tr ' ' '-' && echo
-	@$(EVAL) $(compiledLibs)
+	@#$(EVAL) $(compiledLibs)
+
