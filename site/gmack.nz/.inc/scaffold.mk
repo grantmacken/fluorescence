@@ -3,17 +3,14 @@ DEX := docker exec $(XQ)
 ESCRIPT := $(DEX) xqerl escript
 EVAL := $(DEX) xqerl eval
 
-VolumeList := xqerl-compiled-code xqerl-database
-MountCode  := type=volume,target=$(XQERL_HOME)/code,source=xqerl-compiled-code
-MountData  := type=volume,target=$(XQERL_HOME)/data,source=xqerl-database
-MountBin   := type=bind,target=$(XQERL_HOME)/bin/scripts,source=$(CURDIR)/bin
-MountAssets  := type=volume,target=$(PROXY_HOME)/html,source=static-assets
+VolumeList  := xqerl-compiled-code xqerl-database
+
+MountBin     := type=bind,target=$(XQERL_HOME)/bin/scripts,source=$(CURDIR)/bin
 MountBuild := type=bind,target=/tmp,source=$(CURDIR)/$(B)
 
 compiledLibs := 'BinList = xqerl_code_server:library_namespaces(),\
  NormalList = [binary_to_list(X) || X <- BinList],\
  io:fwrite("~1p~n",[lists:sort(NormalList)]).'
-
 
 ##################################################################
 # https://ec.haxx.se/usingcurl/usingcurl-verbose/usingcurl-writeout
@@ -41,9 +38,9 @@ tansfered   [ %{time_total} ] total transfered '
 # generic make function calls
 # call should result in success or failure
 ##########################################
-
 Tick  = echo -n "$$(tput setaf 2) ✔ $$(tput sgr0) " && echo -n $1
 Cross = echo -n "$$(tput setaf 1) ✘ $$(tput sgr0) " && echo -n $1
+
 GrepOK =  grep -q '$(1)' $(2)
 
 ## equals $1,$2

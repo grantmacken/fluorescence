@@ -9,6 +9,7 @@ function render:home( $map as map(*) ) as element() {
     $map =>render:head(),
     element body {
       $map => render:header(),
+      $map => render:nav(),
       element main {
         attribute class { 'container' },
         element article  {
@@ -17,28 +18,93 @@ function render:home( $map as map(*) ) as element() {
             attribute class { 'p-name' },
             $map?name
             },
-          element article {
             $map?content/node()
-            }
-          }
-        }
+          },
+         $map => render:aside( )
+        },
+      $map => render:footer()
       }
     }
 };
 
+declare
+function render:article_index( $map as map(*) ) as element() {
+  element html {
+    attribute lang {'en'},
+    $map =>render:head(),
+    element body {
+      $map => render:header(),
+      $map => render:nav(),
+      element main {
+        attribute class { 'container' },
+        element article  {
+          attribute class { 'h-entry' },
+          element h1 {
+            attribute class { 'p-name' },
+            $map?name
+            },
+            $map?content/node()
+          },
+         $map => render:aside( )
+        },
+      $map => render:footer()
+      }
+    }
+};
+
+declare
+function render:article( $map as map(*) ) as element() {
+  element html {
+    attribute lang {'en'},
+    $map =>render:head(),
+    element body {
+      $map => render:header(),
+      $map => render:nav(),
+      element main {
+        attribute class { 'container' },
+        element article  {
+          attribute class { 'h-entry' },
+          element h1 {
+            attribute class { 'p-name' },
+            $map?name
+            },
+            $map?content/node()
+          },
+         $map => render:aside( )
+        },
+      $map => render:footer()
+      }
+    }
+};
 
 (:~
 @see  https://tools.ietf.org/html/rfc7807
 ~:)
 declare
 function render:problem( $map as map(*) ) as element() {
- element problem {
-   element type { $map('type') },
-   element title { $map('title') },
-   element status { $map('status') },
-   if ( 'detail' = map:keys( $map ) ) then (element detail { $map('detail') } ) else (),
-   if ( 'instance' = map:keys( $map ) ) then (element detail { $map('instance') } ) else ()
-  }
+  element html {
+    attribute lang {'en'},
+    element head {
+      element title { 'ERROR: We Have a Problem' }
+      },
+    element body {
+        element h1 { 'We Have a Problem' },
+        element dl {
+          element dt { 'code' },
+          element dd { $map?code },
+          element dt { 'description' },
+          element dd { $map?description },
+          if ( $map?value instance of map(*) ) then (
+            element dt { 'detail' },
+            element dd { $map?value?detail },
+            element dt { 'status' },
+            element dd { $map?value?status }
+            )
+          else ()
+          }
+        }
+     }
+
 };
 
 declare
@@ -70,49 +136,6 @@ element ol {
         )
        }
     )
-  }
-};
-
-
-
-declare
-function render:article( $map as map(*) ) as element() {
-  element html {
-    attribute lang {'en'},
-    render:head( $map ),
-    element body {
-      render:header( $map ),
-      render:nav( $map ),
-      element main { 
-        attribute class { 'container' },
-        element article  {
-          attribute class { 'h-entry' },
-          element h1 {
-            attribute class { 'p-name' },
-            $map?name
-            },
-          render:content( $map )
-        }
-      }
-    }
-  }
-};
-
-declare
-function render:article_index( $map as map(*) ) as element() {
-  element html {
-    attribute lang {'en'},
-    render:head( $map ),
-    element body {
-      render:header( $map ),
-      render:nav( $map ),
-      element main {
-        attribute class { 'container' },
-        element article  {
-         render:content( $map )
-        }
-      }
-    }
   }
 };
 
@@ -183,7 +206,7 @@ function render:header( $map as map(*) ) as element() {
       attribute height { '48' },
       attribute alt { 'me' }
     },
-    element span { $map?author?name }
+    $map?author?name
   }
 };
 
@@ -199,29 +222,18 @@ element nav {
       ) =>
       for-each( function( $item ) {
         element li {
-          let $uStart := $map?url => substring-before( concat ('/', $item) )
-          let $url := $uStart || '/' || $item
-          return (
-            if ( $url eq $map?url )
-            then (
-              element span { 
-                attribute aria-current { 'page' }, 
-                $item 
-              } 
-             )
-            else (
-            element a {
-                attribute href { $url },
-                $item
-                }
+            let $uStart := $map?url => substring-before( concat ('/', $item) )
+            let $url := $uStart || '/' || $item
+            return (
+              if ( $url eq $map?url ) 
+                then ( element span { attribute aria-current { 'page' }, $item } )
+              else ( element a { attribute href { $url }, $item } )
               )
-            )
            }
         })
     }
   }
 };
-
 
 declare
 function render:content( $map as map(*)) as element() {
@@ -233,47 +245,55 @@ element div {
 
 (: string-join(map:keys($map), ' ' ) string-join(map:keys($map), ' ' )
 uri-collection($arg as xs:string?)
-
 :)
 
 
 declare
 function render:aside( $map as map(*)) as element() {
+let $seqEntries := 'http://xq/gmack.nz/entry' => uri-collection()
+let $entryCount := $seqEntries => count()
+return (
 element aside {
-element p {  'articles: ' },
-element ol { 
-  uri-collection('http://xq/gmack.nz/article') => 
-    for-each(
-      function ( $item ) {
-        let $doc := doc( $item )
-        return (
-        element li { 
-          element a  { $item }
-          }
-       )}
-    )
+element p { ``[  entries ]``  },
+element ul { 
+   $seqEntries => for-each(
+      function ( $dbURI ) {
+         let $item := $dbURI => db:get()
+         return (
+          if ( $map?url eq $item?url ) then ()
+          else (
+          element li { 
+            element a {
+              attribute href { $item?url  },
+              $item?name 
+              }
+            }
+          ))
+        }
+      )
   }
 }
-};
+)};
 
 
 declare
 function render:footer( $map as map(*)) as element() {
+  let $sURL   := $map?author?url
+  let $sName := $map?author?name
+  return (
   element footer {
     attribute title { 'page footer' },
     attribute role  { 'contentinfo' },
     element a {
-      attribute href {'/'},
-      attribute title { $map('footer-url') },
-      $map('footer-url') => substring-after('//')
+      attribute href { $sURL },
+      $sURL => substring-after('//')
     },
-    ' is the website',
-    'owned, authored and operated by ' ,
+    '&#8239;a website owned, authored and operated by&#8239;' ,
     element a {
-      attribute href { $map('footer-url') },
+      attribute href { $sURL },
       attribute title {'author'},
-      $map('footer-author')
+      $sName
     }
   }
-};
+)};
 

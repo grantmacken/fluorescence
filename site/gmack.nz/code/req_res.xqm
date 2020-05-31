@@ -3,7 +3,7 @@ module namespace res  = "http://gmack.nz/#req_res";
 
 (:
 https://tools.ietf.org/html/rfc7807
-:)
+
 declare
 function res:problem( $sName, $sTitle, $iStatus, $sDetail  ) as map(*) {
   map { 
@@ -13,8 +13,17 @@ function res:problem( $sName, $sTitle, $iStatus, $sDetail  ) as map(*) {
     'detail' : sDetail
   }
 };
-
-
+:)
+declare
+function res:htmlErr( $map as map(*) ) as element() {
+ if ( $map?value instance of map(*) ) 
+  then ( res:status( xs:integer( $map?value?status ), 
+                      $map?description, 
+                      'text/html'))
+  else ( res:status( 500, 
+                    'internal server error', 
+                    'text/html') )
+};
 
 declare
 function res:status() as element() {
@@ -38,6 +47,15 @@ declare
 function res:status( $status as xs:integer, $contentType as xs:string ) as element() {
   <rest:response>
     <http:response status="{string( $status )}">
+      <http:header name="Content-Type" value="{$contentType}"/>
+    </http:response>
+  </rest:response>
+};
+
+declare
+function res:status( $status as xs:integer, $message as xs:string, $contentType as xs:string ) as element() {
+  <rest:response>
+    <http:response status="{$status => string()}" message="{$message}  ">
       <http:header name="Content-Type" value="{$contentType}"/>
     </http:response>
   </rest:response>

@@ -1,8 +1,10 @@
 .build
 .tmp
 .project*
-deploy
+deploy/*
+!deploy/xqerl-database.tar
 proxy/certs
+gcloud/certs
 notes
 site/gmack.nz/*/hold*
 
