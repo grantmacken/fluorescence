@@ -146,14 +146,6 @@ watch:
  inotifywait -qre close_write .  &>/dev/null; done
 	@popd &>/dev/null
 
-.PHONY: watch-content
-watch-content:
-	@pushd site/$(DOMAIN) &>/dev/null
-	@while true; do $(MAKE) content || true;  \
- inotifywait -qre close_write .  &>/dev/null; done
-	@popd &>/dev/null
-
-
 .PHONY: code
 code:
 	@pushd site/$(DOMAIN) &>/dev/null
