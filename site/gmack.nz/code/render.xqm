@@ -256,6 +256,7 @@ return (
 element aside {
 element p { ``[  entries ]``  },
 element ul { 
+  attribute class { 'vertical-list'},
    $seqEntries => for-each(
       function ( $dbURI ) {
          let $item := $dbURI => db:get()
