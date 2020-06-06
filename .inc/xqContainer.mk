@@ -15,6 +15,8 @@ compiledLibs := 'BinList = xqerl_code_server:library_namespaces(),\
  NormalList = [binary_to_list(X) || X <- BinList],\
  io:fwrite("~1p~n",[lists:sort(NormalList)]).'
 
+
+
 ####################
 ### XQERL UP DOWN ##
 ####################
@@ -23,7 +25,6 @@ define xqRun
  docker run --rm  \
  --mount $(MountCode) \
  --mount $(MountData) \
- --mount $(MountBin) \
  --name  $(XQ) \
  --hostname xqerl \
  --network $(NETWORK) \
@@ -32,9 +33,11 @@ define xqRun
  $(XQERL_IMAGE)
 endef
 
-
 .PHONY: xq-up
-xq-up: $(T)/xq-run/network.check $(T)/xq-run/volumes.check $(T)/xq-run/xqerl-up.check
+xq-up: $(T)/xq-run/network.check $(T)/xq-run/volumes.check $(T)/xq-run/xqerl-up.check escripts
+
+.PHONY: escripts
+escripts: $(patsubst %,$(T)/%,$(wildcard bin/*))
 
 .PHONY: clean-xq-run
 clean-xq-run:
@@ -69,6 +72,7 @@ $(T)/xq-run/volumes.check:
 	@docker volume list  --format "{{.Name}}" > $@
 	@$(call MustHaveVolume,xqerl-compiled-code)
 	@$(call MustHaveVolume,xqerl-database)
+	@$(call MustHaveVolume,xqerl-escripts)
 	@$(call MustHaveVolume,static-assets)
 	@$(call MustHaveVolume,nginx-configuration)
 	@$(call MustHaveVolume,letsencrypt)
@@ -99,3 +103,8 @@ xq-info-more:
 	@echo;printf %60s | tr ' ' '-' && echo
 	@$(EVAL) $(compiledLibs)
 
+
+$(T)/bin/%.escript: bin/%.escript
+	@mkdir -p $(dir $@)
+	@docker cp $(<) $(XQ):$(XQERL_HOME)/bin/scripts
+	@cp $< $@
