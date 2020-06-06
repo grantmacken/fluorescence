@@ -76,7 +76,7 @@ $(T)/ngx-run/certs.check: $(T)/ngx-run/volumes.check
 --entrypoint "sh" $(PROXY_IMAGE) -c 'ls -al $(LETSENCRYPT)/live/$(TLS_COMMON_NAME)' > $@
 	@# checks will remove certs.check if failure
 	@grep -q 'privkey' $@
-	@grep -q 'fullchain' $@:w
+	@grep -q 'fullchain' $@
 	@grep -q 'chain.pem' $@
 	@grep -q 'cert' $@
 	@$(call Tick, - certs OK!)

@@ -30,7 +30,7 @@ test:
 up: clean-xq-run xq-up code proxy-up
 
 .PHONY: down
-down: proxy-down xqerl-down
+down: proxy-down xq-down
 
 .PHONY: proxy-up
 proxy-up:
@@ -95,6 +95,10 @@ proxy-info:
 .PHONY: xq-up
 xq-up:
 	@$(MAKE) -f .inc/xqContainer.mk
+
+.PHONY: escripts
+escripts:
+	@$(MAKE) -f .inc/xqContainer.mk $@
 
 .PHONY: clean-xq-run
 clean-xq-run:

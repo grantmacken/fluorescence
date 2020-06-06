@@ -9,7 +9,7 @@ where I initially started to explore using xqerl for web development projects.
 
 - [x] content generated from markdown documents.
 - [x] data stored and retrieved as XDM map items
-- [x] the xQuery render module can be seen a HTML template engine 
+- [x] the xQuery render module can be seen as a simple HTML template engine 
 - [x] the xQuery 'module' contains render functions that use xQuery element constructors to produce HTML pages and fragments
 - [x] the xQuery render module should be easy to read and edit
 - [x] a map item is passed as singe argument to xQuery render functions
