@@ -79,10 +79,10 @@ jobs:
         run: |
             pwd
             ls -al deploy
-    # - nastructure of downloaded filesme: Pull in my docker images
-    #   run: |
-    #       echo ' - pull in xq and ngx images'
-    #       make pull-xq-ngx
+      - name: Pull in my docker images
+        run: |
+            echo ' - pull in xq and ngx images'
+            make pull-xq-ngx
 
     # - name: Setup Google Cloud Platform
     #   uses: GoogleCloudPlatform/github-actions/setup-gcloud@master
