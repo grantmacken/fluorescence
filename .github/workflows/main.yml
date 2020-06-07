@@ -67,6 +67,7 @@ jobs:
         path: deploy/static-assets.tar
   test:
     runs-on: ubuntu-latest
+    needs: build
     steps:
       - uses: actions/checkout@v2
         with:
@@ -78,7 +79,7 @@ jobs:
         run: |
             pwd
             ls -al deploy
-    # - name: Pull in my docker images
+    # - nastructure of downloaded filesme: Pull in my docker images
     #   run: |
     #       echo ' - pull in xq and ngx images'
     #       make pull-xq-ngx
