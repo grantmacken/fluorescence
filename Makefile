@@ -194,3 +194,9 @@ pull-pkgs:
 	@docker pull docker.pkg.github.com/grantmacken/alpine-scour/scour:$(SCOUR_VER)
 	@docker pull docker.pkg.github.com/grantmacken/alpine-zopfli/zopfli:$(ZOPFLI_VER)
 	@docker pull docker.pkg.github.com/grantmacken/alpine-cssnano/cssnano:$(CSSNANO_VER)
+
+.PHONY: pull-xq-ngx
+pull-xq-ngx:
+	@echo $(ghToken) | docker login docker.pkg.github.com --username $(REPO_OWNER) --password-stdin
+	@docker pull $(XQERL_DOCKER_IMAGE):$(XQ_VER)
+	@docker pull $(PROXY_DOCKER_IMAGE):$(NGX_VER)
