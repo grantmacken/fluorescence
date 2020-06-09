@@ -37,6 +37,11 @@
   --bg-alt: hsla(var(--alt-h),var(--alt-s),var(--alt-l-darker),1); /* #1d3a05; */
   --bg-url: '/icons/mackenzie';
   --font-size: min(max(1rem, calc(1rem + ((1vw - 0.48rem) * 0.6944))), 1.5rem);
+  --font-text: 'IBM Plex Serif', 'Georgia', Times, serif;
+  --font-headings: 'IBM Plex Sans', 'Helvetica Neue', Arial, sans-serif;
+  --font-code: 'IBM Plex Mono', 'Menlo', 'DejaVu Sans Mono', 'Bitstream Vera Sans Mono', Courier, monospace;
+  --font-lists: 'IBM Plex Sans Condensed', 'Helvetica Neue', Arial, sans-serif;
+
   /* min-height: 0vw; */
  }
 
@@ -61,7 +66,7 @@ html {
   height: 100%;
   border-collapse: collapse;
   font-size: 125%;
-  font-family: sans-serif;
+  font-family: var(--font-text);
   line-height: 1.5;
   color: #222;
   background-color: var(--bg-hsl); /* #c1cad1 */
@@ -82,7 +87,8 @@ header {
   align-items: center;
   justify-content: center;
   /* color: var( --clr-comlementary ); */
-  min-height: 10vh;
+  min-height: 10vh;  
+  font-family: var(--font-headings);
   font-size: 2.25rem;
 }
 
@@ -96,9 +102,10 @@ nav[aria-label=Breadcrumb] {
 }
 
 .breadcrumb {
-  display: flex;  
+  display: flex;
   align-items: center;
   padding-right: 1rem;
+  font-family: var(--font-lists);
   font-size: smaller;
 }
 
@@ -116,7 +123,6 @@ nav[aria-label=Breadcrumb] {
 .breadcrumb li:first-child::before {
     content: " ";
 }
-
 
 main {
   flex-grow: 1;
@@ -142,8 +148,6 @@ main > article {
   /* background-color: hsla(204, 25%, 80%, .9); /1* #c0cfd9 *1/ */
   min-width: 75%;
 }
-
-
 
 main > aside {
   /* background-image: url( '/icons/mackenzie' ); */
@@ -182,9 +186,9 @@ article + * {
 
 h1,
 h2,
-h3,
-{
-  font-weight: 600;
+h3 {
+  font-family: var(--font-headings);
+  /* font-weight: 600; */
   /* color: #771903; */
 }
 
@@ -197,6 +201,7 @@ h2 {
 h1 {
   margin: 0.67em 0;
   font-size: 2.25rem;
+  letter-spacing: 0.125em;
   line-height: 1.2;
 }
 

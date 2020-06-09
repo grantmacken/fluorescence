@@ -3,10 +3,7 @@ DEX := docker exec $(XQ)
 ESCRIPT := $(DEX) xqerl escript
 EVAL := $(DEX) xqerl eval
 
-VolumeList  := xqerl-compiled-code xqerl-database
-
-MountBin     := type=bind,target=$(XQERL_HOME)/bin/scripts,source=$(CURDIR)/bin
-MountBuild := type=bind,target=/tmp,source=$(CURDIR)/$(B)
+BindMountBuild := type=bind,target=/tmp,source=$(CURDIR)/$(B)
 
 compiledLibs := 'BinList = xqerl_code_server:library_namespaces(),\
  NormalList = [binary_to_list(X) || X <- BinList],\

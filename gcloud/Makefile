@@ -47,7 +47,6 @@ certs-into-vol: certs-to-host
  && rm -fv /tmp/*.pem'
 	@printf %60s | tr ' ' '-' && echo
 
-
 .PHONY: certs-to-host
 certs-to-host:
 	@echo ' - on GCE in the running ngx container copy certs into certs dir' 

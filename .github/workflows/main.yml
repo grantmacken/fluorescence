@@ -73,30 +73,33 @@ jobs:
       with:
           fetch-depth: 1
     - uses: actions/download-artifact@v2
-    - name: Display deploy dir
+    - name: Move tars into deploy dir
       run: |
-          pwd
           mv static-assets/* deploy/
           mv nginx-configuration/* deploy/
           mv xqerl-compiled-code/* deploy/
           ls -al deploy
-          # - name: Pull in my docker imag:w
-          #es
-    #   run: |
-    #       echo ' - pull in xq and ngx images'
-    #       make pull-xq-ngx
-    # - name: Setup Google Cloud Platform
-    #   uses: GoogleCloudPlatform/github-actions/setup-gcloud@master
-    #   with:
-    #     project_id: ${{ secrets.GCE_PROJECT_ID }}
-    #     service_account_key: ${{ secrets.GCE_SERVICE_ACCOUNT_KEY }}
-    #     service_account_email: ${{ secrets.GCE_SERVICE_ACCOUNT_EMAIL }}
-    #     export_default_credentials: true
-    # - name: Fetch certs and put into 'letsencypt' volume on 'github-actions' host
-    #   run: |
-    #       make gc-init
-    #       make certs-into-vol
-    #       ls -al deploy
-
+    - name: Pull in my docker images
+      run: |
+          echo ' - pull in xq and ngx images'
+          make pull-xq-ngx
+    - name: Setup Google Cloud Platform
+      uses: GoogleCloudPlatform/github-actions/setup-gcloud@master
+      with:
+        project_id: ${{ secrets.GCE_PROJECT_ID }}
+        service_account_key: ${{ secrets.GCE_SERVICE_ACCOUNT_KEY }}
+        service_account_email: ${{ secrets.GCE_SERVICE_ACCOUNT_EMAIL }}
+        export_default_credentials: true
+    - name: Fetch certs and put into 'letsencypt' volume on 'github-actions' host
+      run: |
+          make gc-init
+          make certs-into-vol
+          ls -al deploy
+    - name: untar deploy tars into volumes
+      run: |
+        make xqerl-database-tar-deploy
+        make xqerl-compiled-code-tar-deploy
+        make static-assets-tar-deploy
+        make nginx-configuration-tar-deploy
 
 

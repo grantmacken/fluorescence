@@ -8,6 +8,7 @@ MAKEFLAGS += --silent
 ###################################
 include .env .version.env .gce.env
 include .inc/common.mk
+BindMountDeploy  := type=bind,target=/tmp,source=$(abspath deploy)
 ###################################
 # note: ghToken should be defined on gihub actions
 ifeq ($(origin ghToken),undefined)
@@ -96,9 +97,7 @@ proxy-info:
 xq-up:
 	@$(MAKE) -f .inc/xqContainer.mk
 
-.PHONY: escripts
-escripts:
-	@$(MAKE) -f .inc/xqContainer.mk $@
+
 
 .PHONY: clean-xq-run
 clean-xq-run:
@@ -150,6 +149,19 @@ watch:
  inotifywait -qre close_write .  &>/dev/null; done
 	@popd &>/dev/null
 
+
+.PHONY: escript
+escript:
+	@pushd site/$(DOMAIN) &>/dev/null
+	@$(MAKE) $@
+	@popd &>/dev/null
+
+.PHONY: clean-escript
+clean-escript:
+	@pushd site/$(DOMAIN) &>/dev/null
+	@$(MAKE) $@
+	@popd &>/dev/null
+
 .PHONY: code
 code:
 	@pushd site/$(DOMAIN) &>/dev/null
@@ -180,11 +192,33 @@ clean-assets:
 	@$(MAKE) $@
 	@popd &>/dev/null
 
-.PHONY: db-tar-deploy
-db-tar-deploy:
-	@pushd site/$(DOMAIN) &>/dev/null
-	@$(MAKE) $@
-	@popd &>/dev/null
+.PHONY: xqerl-database-tar-deploy
+xqerl-database-tar-deploy:
+	@docker run --rm \
+ --mount $(MountData) \
+ --mount $(BindMountDeploy) \
+ --entrypoint "tar" $(XQERL_IMAGE) xvf /tmp/xqerl-database.tar -C /
+
+.PHONY: xqerl-compiled-code-tar-deploy
+xqerl-compiled-code-tar-deploy:
+	@docker run --rm \
+ --mount $(MountCode) \
+ --mount $(BindMountDeploy) \
+ --entrypoint "tar" $(PROXY_IMAGE) xvf /tmp/xqerl-compiled-code.tar -C /
+
+.PHONY: static-assets-tar-deploy
+static-assets-tar-deploy:
+	@docker run --rm \
+ --mount $(MountAssets) \
+ --mount $(BindMountDeploy) \
+ --entrypoint "tar" $(PROXY_IMAGE) xvf /tmp/static-assets.tar -C /
+
+.PHONY: nginx-configuration-tar-deploy
+nginx-configuration-tar-deploy:
+	@docker run --rm \
+ --mount $(MountNginxConf) \
+ --mount $(BindMountDeploy) \
+ --entrypoint "tar" $(PROXY_IMAGE) xvf /tmp/nginx-configuration.tar -C /
 
 .PHONY: pull-pkgs
 pull-pkgs:
@@ -200,3 +234,8 @@ pull-xq-ngx:
 	@echo $(ghToken) | docker login docker.pkg.github.com --username $(REPO_OWNER) --password-stdin
 	@docker pull $(XQERL_DOCKER_IMAGE):$(XQ_VER)
 	@docker pull $(PROXY_DOCKER_IMAGE):$(NGX_VER)
+
+
+.PHONY: list-compiled-libs
+list-compiled-libs:
+	@$(ESCRIPT) bin/scripts/$(@).escript

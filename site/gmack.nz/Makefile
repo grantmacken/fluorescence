@@ -34,7 +34,7 @@ watch:
 .PHONY: clean
 clean: clean-code clean-assets
 
-include .inc/code.mk .inc/static-assets.mk  .inc/content.mk 
+include .inc/code.mk .inc/static-assets.mk  .inc/content.mk  .inc/escripts.mk
 
 
 

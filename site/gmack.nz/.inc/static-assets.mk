@@ -27,6 +27,7 @@ remove-content-in-assets-volume:
  --mount $(MountAssets) \
  --entrypoint "rm" $(PROXY_IMAGE) -rf ./html/$(DOMAIN)
 
+
 #############
 ### ICONS ###
 #############
@@ -61,7 +62,7 @@ $(B)/$(DOMAIN)/static-assets/icons/%.svgz: $(T)/$(DOMAIN)/static-assets/icons/%.
 	@echo "   gzip size: [ $$(wc -c  $@ | cut -d' ' -f1) ]"	
 	@docker run --rm \
  --mount $(MountAssets) \
- --mount $(MountBuild) \
+ --mount $(BindMountBuild) \
  --entrypoint "sh" $(PROXY_IMAGE) \
  -c 'mkdir -p "$(dir $(patsubst $(B)/%,html/%,$@))" && \
  cp -v /tmp/$(patsubst $(B)/%,%,$@) $(dir $(patsubst $(B)/%,html/%,$@))'
@@ -99,7 +100,7 @@ $(B)/$(DOMAIN)/static-assets/styles/%.css.gz: $(T)/$(DOMAIN)/static-assets/style
 	@echo "   gzip size: [ $$(wc -c $@ | cut -d' ' -f1) ]"
 	@docker run --rm \
  --mount $(MountAssets) \
- --mount $(MountBuild) \
+ --mount $(BindMountBuild) \
  --entrypoint "sh" $(PROXY_IMAGE) \
  -c 'mkdir -p "$(dir $(patsubst $(B)/%,html/%,$@))" && \
  cp -v /tmp/$(patsubst $(B)/%,%,$@) $(dir $(patsubst $(B)/%,html/%,$@))'

@@ -8,9 +8,7 @@ MAKEFLAGS += --silent
 ###################################
 include .env .version.env .gce.env
 include .inc/common.mk
-DEX := docker exec $(XQ)
-ESCRIPT := $(DEX) xqerl escript
-EVAL := $(DEX) xqerl eval
+
 compiledLibs := 'BinList = xqerl_code_server:library_namespaces(),\
  NormalList = [binary_to_list(X) || X <- BinList],\
  io:fwrite("~1p~n",[lists:sort(NormalList)]).'
@@ -25,6 +23,7 @@ define xqRun
  docker run --rm  \
  --mount $(MountCode) \
  --mount $(MountData) \
+ --mount $(MountEscripts) \
  --name  $(XQ) \
  --hostname xqerl \
  --network $(NETWORK) \
@@ -34,10 +33,7 @@ define xqRun
 endef
 
 .PHONY: xq-up
-xq-up: $(T)/xq-run/network.check $(T)/xq-run/volumes.check $(T)/xq-run/xqerl-up.check escripts
-
-.PHONY: escripts
-escripts: $(patsubst %,$(T)/%,$(wildcard bin/*))
+xq-up: $(T)/xq-run/network.check $(T)/xq-run/volumes.check $(T)/xq-run/xqerl-up.check
 
 .PHONY: clean-xq-run
 clean-xq-run:
@@ -90,6 +86,7 @@ xq-info:
 	@docker inspect --format='{{range .NetworkSettings.Networks}}{{.IPAddress}}{{end}}' $(XQ)
 	@echo;printf %60s | tr ' ' '-' && echo
 
+.PHONY: xq-info-more
 xq-info-more:
 	@echo -n '- working dir: '
 	@$(EVAL) '{ok,CWD}=file:get_cwd(),list_to_atom(CWD).'
@@ -104,7 +101,6 @@ xq-info-more:
 	@$(EVAL) $(compiledLibs)
 
 
-$(T)/bin/%.escript: bin/%.escript
-	@mkdir -p $(dir $@)
-	@docker cp $(<) $(XQ):$(XQERL_HOME)/bin/scripts
-	@cp $< $@
+
+
+
