@@ -28,17 +28,17 @@ test:
 	@popd &>/dev/null
 
 .PHONY: up
-up: clean-xq-run xq-up code proxy-up
+up: clean-xq-run xq-up code ngx-up
 
 .PHONY: down
-down: proxy-down xq-down
+down: ngx-down xq-down
 
-.PHONY: proxy-up
-proxy-up:
+.PHONY: ngx-up
+ngx-up:
 	@$(MAKE) -f .inc/ngxContainer.mk ngx-up
 
-.PHONY: proxy-down
-proxy-down:
+.PHONY: ngx-down
+ngx-down:
 	@$(MAKE) -f .inc/ngxContainer.mk ngx-down
 
 .PHONY: gc-init
@@ -149,7 +149,6 @@ watch:
  inotifywait -qre close_write .  &>/dev/null; done
 	@popd &>/dev/null
 
-
 .PHONY: escript
 escript:
 	@pushd site/$(DOMAIN) &>/dev/null
@@ -197,13 +196,6 @@ clean-assets:
 	@pushd site/$(DOMAIN) &>/dev/null
 	@$(MAKE) $@
 	@popd &>/dev/null
-
-.PHONY: xqerl-database-tar-deploy
-xqerl-database-tar-deploy:
-	@docker run --rm \
- --mount $(MountData) \
- --mount $(BindMountDeploy) \
- --entrypoint "tar" $(XQERL_IMAGE) xvf /tmp/xqerl-database.tar -C /
 
 .PHONY: xqerl-database-tar-deploy
 xqerl-database-tar-deploy:

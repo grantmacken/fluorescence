@@ -62,7 +62,6 @@ jobs:
       with:
         name: nginx-configuration
         path: deploy/nginx-configuration.tar
-
   test:
     runs-on: ubuntu-latest
     needs: build
@@ -79,9 +78,7 @@ jobs:
           mv xqerl-escripts/* deploy/
           ls -al deploy
     - name: Pull in my docker images
-      run: |
-          echo ' - pull in xq and ngx images'
-          make pull-xq-ngx
+      run: make pull-xq-ngx
     - name: Setup Google Cloud Platform
       uses: GoogleCloudPlatform/github-actions/setup-gcloud@master
       with:
@@ -94,12 +91,27 @@ jobs:
           make gc-init
           make certs-into-vol
           ls -al deploy
-    - name: untar deploy tars into volumes
+    - name: Untar deploy tars into volumes
       run: |
         make xqerl-database-tar-deploy
-        make xqerl-database-tar-deploy
+        make xqerl-escripts-tar-deploy
         make static-assets-tar-deploy
         make nginx-configuration-tar-deploy
+    - name: Bring up the xqerl container named 'xq'
+      run: make xq-up && make xq-info
+    - name: Build compiled xQuery files to run on the beam
+      run: make code
+    - name: Check xq running xqerl on the 'github actions' host
+      run: make xq-info-more
+    - name: Reachable routes - use curl to check restXQ resolvable routes.
+      run: make check-xq-routes
+    - name: Bring up the proxy container named 'ngx'
+      run: make ngx-up
+    - name: CURL TEST
+      run: echo 'TODO'
+
+
+
 
   # deploy:
   #   runs-on: ubuntu-latest
