@@ -19,14 +19,14 @@ jobs:
           fetch-depth: 1
     - name: Pull in my docker images
       run: echo '::set-env name=TERM::xterm' && make pull-pkgs
-    - name: put xqerl escripts into 'xqerl-escripts' volume
+    - name: Put xqerl escripts into 'xqerl-escripts' volume
       run: make escript
     - name: Create xqerl-escripts artifact
       uses: actions/upload-artifact@v2
       with:
         name: xqerl-escripts
         path: deploy/xqerl-escripts.tar
-    - name: untar data  into 'xqerl database' volume
+    - name: Untar data  into 'xqerl database' volume
       run: make xqerl-database-tar-deploy
     - name: Create xqerl-database artifact
       uses: actions/upload-artifact@v2
@@ -35,23 +35,22 @@ jobs:
         path: deploy/xqerl-database.tar
     - name: Bring up the xqerl container
       run: make xq-up && make xq-info
-    - name: build compiled xQuery files to run on the beam, then put into 'xqerl-compiled-code' volume
+    - name: Build compiled xQuery files to run on the beam, then put into 'xqerl-compiled-code' volume
       run: make code
-    - name: check what we have running on the beam
-      run: |
-          make xq-info-more
-          # use curl to check routes
-          make check-xq-routes
+    - name: On the beam: check xqerl running on the 'github actions' host.
+      run: make xq-info-more
+    - name: Reachable routes: use curl to check restXQ resolvable routes.
+      run: make check-xq-routes
           # note if restXQ routes checkout OK then
-          # routes to statis assets will not reslove as they rely on the proxy
+          # routes to statis assets will not resolve as they rely on the proxy
     - name: Create xqerl-compiled-code artifact
       uses: actions/upload-artifact@v2
       with:
         name: xqerl-compiled-code
         path: deploy/xqerl-compiled-code.tar
     - name: Build 'static assets' from src files and put into 'static-assets' volume
-      run: make code
-    - name: Create  static-assets artifact
+      run: make assets
+    - name: Create static-assets artifact
       uses: actions/upload-artifact@v2
       with:
         name: static-assets
@@ -64,46 +63,43 @@ jobs:
         name: nginx-configuration
         path: deploy/nginx-configuration.tar
 
-
-
-
-
-  # test:
-  #   runs-on: ubuntu-latest
-  #   needs: build
-  #   steps:
-  #   - uses: actions/checkout@v2
-  #     with:
-  #         fetch-depth: 1
-  #   - uses: actions/download-artifact@v2
-  #   - name: Move tars into deploy dir
-  #     run: |
-  #         mv static-assets/* deploy/
-  #         mv nginx-configuration/* deploy/
-  #         mv xqerl-compiled-code/* deploy/
-  #         mv xqerl-escripts/* deploy/
-  #         ls -al deploy
-  #   - name: Pull in my docker images
-  #     run: |
-  #         echo ' - pull in xq and ngx images'
-  #         make pull-xq-ngx
-  #   - name: Setup Google Cloud Platform
-  #     uses: GoogleCloudPlatform/github-actions/setup-gcloud@master
-  #     with:
-  #       project_id: ${{ secrets.GCE_PROJECT_ID }}
-  #       service_account_key: ${{ secrets.GCE_SERVICE_ACCOUNT_KEY }}
-  #       service_account_email: ${{ secrets.GCE_SERVICE_ACCOUNT_EMAIL }}
-  #       export_default_credentials: true
-  #   - name: Fetch certs and put into 'letsencypt' volume on 'github-actions' host
-  #     run: |
-  #         make gc-init
-  #         make certs-into-vol
-  #         ls -al deploy
-  #   - name: untar deploy tars into volumes
-  #     run: |
-  #       make xqerl-database-tar-deploy
-  #       make static-assets-tar-deploy
-  #       make nginx-configuration-tar-deploy
+  test:
+    runs-on: ubuntu-latest
+    needs: build
+    steps:
+    - uses: actions/checkout@v2
+      with:
+          fetch-depth: 1
+    - uses: actions/download-artifact@v2
+    - name: Move tars into deploy dir
+      run: |
+          mv static-assets/* deploy/
+          mv nginx-configuration/* deploy/
+          mv xqerl-compiled-code/* deploy/
+          mv xqerl-escripts/* deploy/
+          ls -al deploy
+    - name: Pull in my docker images
+      run: |
+          echo ' - pull in xq and ngx images'
+          make pull-xq-ngx
+    - name: Setup Google Cloud Platform
+      uses: GoogleCloudPlatform/github-actions/setup-gcloud@master
+      with:
+        project_id: ${{ secrets.GCE_PROJECT_ID }}
+        service_account_key: ${{ secrets.GCE_SERVICE_ACCOUNT_KEY }}
+        service_account_email: ${{ secrets.GCE_SERVICE_ACCOUNT_EMAIL }}
+        export_default_credentials: true
+    - name: Fetch certs and put into 'letsencypt' volume on 'github-actions' host
+      run: |
+          make gc-init
+          make certs-into-vol
+          ls -al deploy
+    - name: untar deploy tars into volumes
+      run: |
+        make xqerl-database-tar-deploy
+        make xqerl-database-tar-deploy
+        make static-assets-tar-deploy
+        make nginx-configuration-tar-deploy
 
   # deploy:
   #   runs-on: ubuntu-latest
