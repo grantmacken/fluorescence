@@ -11,6 +11,10 @@ compile =  $(ESCRIPT) bin/scripts/compile.escript ./code/src/$1
 PHONY: code
 code: $(D)/xqerl-compiled-code.tar
 
+PHONY: recompile
+recompile: 
+	@$(ESCRIPT) bin/scripts/compile.escript ./code/src/newBase60.xqm
+
 PHONY: clean-code
 clean-code:
 	@echo '## $@ ##'
@@ -37,7 +41,7 @@ $(B)/code/%.xqm: $(T)/compile_result/%.txt
 	@#docker cp $(XQ):$(XQERL_HOME)/code/src/$(notdir $@) $(dir $@)
 	@#$(DEX) ls -al $(XQERL_HOME)/code/src/$(notdir $@)
 	@$(DEX) cat $(XQERL_HOME)/code/src/$(notdir $@) > $@
-	@$(DEX) rm $(XQERL_HOME)/code/src/$(notdir $@)
+	@# leave src $(DEX) rm $(XQERL_HOME)/code/src/$(notdir $@)
 
 # .PRECIOUS: $(C)/code/%.txt
 $(T)/compile_result/%.txt: code/%.xqm

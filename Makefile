@@ -168,6 +168,12 @@ code:
 	@$(MAKE) $@
 	@popd &>/dev/null
 
+.PHONY: recompile
+recompile:
+	@pushd site/$(DOMAIN) &>/dev/null
+	@$(MAKE) $@
+	@popd &>/dev/null
+
 .PHONY: content
 content:
 	@pushd site/$(DOMAIN) &>/dev/null
