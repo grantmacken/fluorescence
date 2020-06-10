@@ -217,7 +217,7 @@ xqerl-escripts-tar-deploy:
 	@docker run --rm \
  --mount $(MountEscripts) \
  --mount $(BindMountDeploy) \
- --entrypoint "tar" $(PROXY_IMAGE) xvf /tmp/xqerl-compiled-code.tar -C /
+ --entrypoint "tar" $(XQERL_IMAGE) xvf /tmp/xqerl-escripts.tar -C /
 
 .PHONY: static-assets-tar-deploy
 static-assets-tar-deploy:
