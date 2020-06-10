@@ -105,5 +105,5 @@ jobs:
   #       make static-assets-tar-deploy
   #       make nginx-configuration-tar-deploy
 
-  deploy:
-    runs-on: ubuntu-latest
+  # deploy:
+  #   runs-on: ubuntu-latest
