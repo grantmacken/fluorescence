@@ -22,8 +22,6 @@ T := .tmp
 MountCode   := type=volume,target=$(XQERL_HOME)/code,source=xqerl-compiled-code
 MountData   := type=volume,target=$(XQERL_HOME)/data,source=xqerl-database
 MountEscripts   := type=volume,target=$(XQERL_HOME)/bin/scripts,source=xqerl-escripts
-
-
 MountAssets := type=volume,target=$(PROXY_HOME)/html,source=static-assets
 MountNginxConf   := type=volume,target=$(PROXY_HOME)/conf,source=nginx-configuration
 MountLetsencrypt := type=volume,target=$(LETSENCRYPT),source=letsencrypt

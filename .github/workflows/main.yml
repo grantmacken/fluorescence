@@ -37,9 +37,9 @@ jobs:
       run: make xq-up && make xq-info
     - name: Build compiled xQuery files to run on the beam, then put into 'xqerl-compiled-code' volume
       run: make code
-    - name: On the beam: check xqerl running on the 'github actions' host.
+    - name: Check xq running xqerl on the 'github actions' host
       run: make xq-info-more
-    - name: Reachable routes: use curl to check restXQ resolvable routes.
+    - name: Reachable routes - use curl to check restXQ resolvable routes.
       run: make check-xq-routes
           # note if restXQ routes checkout OK then
           # routes to statis assets will not resolve as they rely on the proxy

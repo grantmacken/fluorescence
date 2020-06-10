@@ -205,10 +205,17 @@ xqerl-database-tar-deploy:
  --mount $(BindMountDeploy) \
  --entrypoint "tar" $(XQERL_IMAGE) xvf /tmp/xqerl-database.tar -C /
 
-.PHONY: xqerl-compiled-code-tar-deploy
-xqerl-compiled-code-tar-deploy:
+.PHONY: xqerl-database-tar-deploy
+xqerl-database-tar-deploy:
 	@docker run --rm \
- --mount $(MountCode) \
+ --mount $(MountData) \
+ --mount $(BindMountDeploy) \
+ --entrypoint "tar" $(XQERL_IMAGE) xvf /tmp/xqerl-database.tar -C /
+
+.PHONY: xqerl-escripts-tar-deploy
+xqerl-escripts-tar-deploy:
+	@docker run --rm \
+ --mount $(MountEscripts) \
  --mount $(BindMountDeploy) \
  --entrypoint "tar" $(PROXY_IMAGE) xvf /tmp/xqerl-compiled-code.tar -C /
 
