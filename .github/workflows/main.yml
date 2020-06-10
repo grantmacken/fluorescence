@@ -26,7 +26,7 @@ jobs:
       run: |
         # at the moment, only the compile script
         make escript
-        docker volume lists
+        docker volume ls
         ls deploy
     - name: Create xqerl-escripts artifact
       uses: actions/upload-artifact@v2
