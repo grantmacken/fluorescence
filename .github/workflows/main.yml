@@ -21,8 +21,18 @@ jobs:
       run: echo '::set-env name=TERM::xterm' && make pull-pkgs
     - name: put xqerl escripts into 'xqerl-escripts' volume
       run: make escript
+    - name: Create xqerl-escripts artifact
+      uses: actions/upload-artifact@v2
+      with:
+        name: xqerl-escripts
+        path: deploy/xqerl-escripts.tar
     - name: untar data  into 'xqerl database' volume
       run: make xqerl-database-tar-deploy
+    - name: Create xqerl-database artifact
+      uses: actions/upload-artifact@v2
+      with:
+        name: xqerl-database
+        path: deploy/xqerl-database.tar
     - name: Bring up the xqerl container
       run: make xq-up && make xq-info
     - name: build compiled xQuery files to run on the beam, then put into 'xqerl-compiled-code' volume
@@ -34,35 +44,28 @@ jobs:
           make check-xq-routes
           # note if restXQ routes checkout OK then
           # routes to statis assets will not reslove as they rely on the proxy
-    - name: Build 'nginx configuration files' from src files and put into 'nginx-configuration' volume
-      run: make ngx
-    - name: Build 'static assets' from src files and put into 'static-assets' volume
-      run: make assets
-    - name: Create artifacts
+    - name: Create xqerl-compiled-code artifact
       uses: actions/upload-artifact@v2
       with:
-        path: deploy/*
+        name: xqerl-compiled-code
+        path: deploy/xqerl-compiled-code.tar
+    - name: Build 'static assets' from src files and put into 'static-assets' volume
+      run: make code
+    - name: Create  static-assets artifact
+      uses: actions/upload-artifact@v2
+      with:
+        name: static-assets
+        path: deploy/static-assets.tar
+    - name: Build 'nginx configuration files' from src files and put into 'nginx-configuration' volume
+      run: make ngx
+    - name: Create nginx-configuration artifact
+      uses: actions/upload-artifact@v2
+      with:
+        name: nginx-configuration
+        path: deploy/nginx-configuration.tar
 
-    # - name: Create  static-assets artifact
-    #   uses: actions/upload-artifact@v2
-    #   with:
-    #     name: static-assets
-    #     path: deploy/static-assets.tar
-    # - name: Create xqerl-escripts artifact
-    #   uses: actions/upload-artifact@v2
-    #   with:
-    #     name: xqerl-escripts
-    #     path: deploy/xqerl-escripts.tar
-    # - name: Create nginx-configuration artifact
-    #   uses: actions/upload-artifact@v2
-    #   with:
-    #     name: nginx-configuration
-    #     path: deploy/nginx-configuration.tar
-    # - name: Create xqerl-compiled-code artifact
-    #   uses: actions/upload-artifact@v2
-    #   with:
-    #     name: xqerl-compiled-code
-    #     path: deploy/xqerl-compiled-code.tar
+
+
 
 
   # test:
@@ -102,4 +105,5 @@ jobs:
   #       make static-assets-tar-deploy
   #       make nginx-configuration-tar-deploy
 
-
+  deploy:
+    runs-on: ubuntu-latest
