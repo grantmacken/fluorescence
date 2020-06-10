@@ -41,7 +41,6 @@ jobs:
     - name: Create artifacts
       uses: actions/upload-artifact@v2
       with:
-        name: deploy
         path: deploy/*
 
     # - name: Create  static-assets artifact
