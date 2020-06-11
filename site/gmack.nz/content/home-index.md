@@ -4,9 +4,12 @@
 "index" : "yep"
 }-->
 
-This work-in-progress site is a rework of a previous project, 
-where I initially started to explore using xqerl for web development projects.
+This blog is a rework of a previous project, where I initially started to explore using xqerl for web development projects.
+Like every other blog I'll write and about the stuff I am interested in, which will most likely centre around 'declarative markup' tech.
+Initially I am going to write about, how I am putting this site together.
 
+
+<!--
 - [x] content generated from markdown documents.
 - [x] data stored and retrieved as XDM map items
 - [x] the xQuery render module can be seen as a simple HTML template engine 
@@ -15,8 +18,6 @@ where I initially started to explore using xqerl for web development projects.
 - [x] a map item is passed as singe argument to xQuery render functions
 - [x] the map item needs to be rich enough to populate a page
 
-
-<!--
 
 Static Site Generators have become increasingly popular over the last few years. 
 One of ideas of ‘SSG’ is that the generator logic can reside in the markdown document,
