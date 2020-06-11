@@ -252,9 +252,9 @@ certs-clean:
 gc-deploy:
 	@pushd gcloud &>/dev/null
 	@$(MAKE) gc-xq-stop
-	@$(MAKE) make gc-deploy-tars
-	@$(MAKE) make gc-up
-	@$(MAKE) make gc-code
+	@$(MAKE) gc-deploy-tars
+	@$(MAKE) gc-xq-up
+	@$(MAKE) gc-code
 	@$(MAKE) gc-ngx-restart
 	@popd &>/dev/null
 
