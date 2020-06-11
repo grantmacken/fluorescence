@@ -247,6 +247,23 @@ certs-clean:
 	@$(MAKE) $@
 	@popd &>/dev/null
 
+
+.PHONY: gc-deploy
+gc-code:
+	@pushd gcloud &>/dev/null
+	@$(MAKE) gc-xq-stop
+	@$(MAKE) make gc-deploy-tars
+	@$(MAKE) make gc-up
+	@$(MAKE) make gc-code
+	@$(MAKE) gc-ngx-restart
+	@popd &>/dev/null
+
+.PHONY: gc-code
+gc-code:
+	@pushd gcloud &>/dev/null
+	@$(MAKE) $@
+	@popd &>/dev/null
+
 .PHONY: gc-deploy-tars
 gc-deploy-tars:
 	@pushd gcloud &>/dev/null
@@ -265,8 +282,8 @@ gc-xq-up:
 	@$(MAKE) $@
 	@popd &>/dev/null
 
-.PHONY: gc-ngx-up
-gc-ngx-up:
+.PHONY: gc-xq-stop
+gc-xq-stop:
 	@pushd gcloud &>/dev/null
 	@$(MAKE) $@
 	@popd &>/dev/null
@@ -276,6 +293,15 @@ gc-code:
 	@pushd gcloud &>/dev/null
 	@$(MAKE) $@
 	@popd &>/dev/null
+
+
+.PHONY: gc-ngx-up
+gc-ngx-up:
+	@pushd gcloud &>/dev/null
+	@$(MAKE) $@
+	@popd &>/dev/null
+
+
 
 .PHONY: gc-ngx-restart
 gc-ngx-restart:
