@@ -5,6 +5,7 @@ SHELL=/bin/bash
 MAKEFLAGS += --warn-undefined-variables
 MAKEFLAGS += --no-builtin-rules
 MAKEFLAGS += --silent
+
 #####################
 ### SITE gmack.nz ###
 #####################
@@ -17,11 +18,10 @@ D := ../../deploy
 MY_BIN_PATH=$(abspath ../../bin)
 
 include .inc/scaffold.mk
-
 # assets content build
 
 .PHONY: build
-build: code assets
+build: code assets content
 	@$(if $(GITHUB_ACTIONS),,xdotool search --onlyvisible --name "Mozilla Firefox"  key  Control_L+F5 || true)
 
 .PHONY: watch
@@ -36,8 +36,5 @@ clean: clean-code clean-assets
 
 include .inc/code.mk .inc/static-assets.mk  .inc/content.mk  .inc/escripts.mk
 
-
-
-##################################
 
 
