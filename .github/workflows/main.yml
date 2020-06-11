@@ -116,7 +116,7 @@ jobs:
           # - fetching static assets
           # - checking hit-miss cache
     - name: Google Compute Engine Deploy
-      run: gc-deploy
+      run: make gc-deploy
 # I am not sure whether untar into db volume will corrupt xqerl db
 # if db io operations are occurring so I am stopping xq.
 # I might even remove running 'xqerl-database' volume and replace with local volume
