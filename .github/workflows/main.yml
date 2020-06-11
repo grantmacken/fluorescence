@@ -78,7 +78,7 @@ jobs:
           mv xqerl-escripts/* deploy/
           ls -al deploy
     - name: Pull in my docker images
-      run: make pull-xq-ngx
+      run: echo '::set-env name=TERM::xterm' &&  pull-xq-ngx
     - name: Setup Google Cloud Platform
       uses: GoogleCloudPlatform/github-actions/setup-gcloud@master
       with:
@@ -108,10 +108,21 @@ jobs:
     - name: Bring up the proxy container named 'ngx'
       run: make ngx-up
     - name: CURL TEST
-      run: echo 'TODO'
-
-
-
-
-  # deploy:
-  #   runs-on: ubuntu-latest
+      run: |
+          echo 'TODO: after tests we are going to deploy'
+          # tests should cover
+          # - fetching static assets
+          # - checking hit-miss cache
+    - name: Deploy tars into thier respective volumes
+      run: |
+          # I am not sure whether untar into db volume will corrupt xqerl db
+          # if db io operations are occurring so I am stopping xq.
+          # I might even remove running 'xqerl-database' volume and replace with local volume
+          # If the nginx cache is working there should be no downtime as proxied
+          # resources will be fetched from the cache not the db.
+          make gc-xq-stop
+          make gc-deploy-tars
+          make gc-xq-up
+          # the next set registers restXQ routes
+          make gc-code
+          make gc-ngx-restart
