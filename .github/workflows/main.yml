@@ -78,7 +78,7 @@ jobs:
           mv xqerl-escripts/* deploy/
           ls -al deploy
     - name: Pull in my docker images
-      run: echo '::set-env name=TERM::xterm' &&  pull-xq-ngx
+      run: echo '::set-env name=TERM::xterm' && make  pull-xq-ngx
     - name: Setup Google Cloud Platform
       uses: GoogleCloudPlatform/github-actions/setup-gcloud@master
       with:
