@@ -16,8 +16,9 @@ Gcmd := $(Gssh) --command
 Gxq  := $(Gssh) --container $(XQ) --command
 Gngx := $(Gssh) --container $(NGX) --command
 Gscp := gcloud compute scp --zone=$(GCE_ZONE) --project $(GCE_PROJECT_ID) 
+GceBindMountDeploy := type=bind,target=/tmp,source=/home/$(GCE_NAME)/deploy
 
-# FUNCS
+# FUNCSgv
 CopyCerts = docker cp $(NGX):$(1)/$(2).pem ./certs -L
 # CopyCerts = docker cp $(NGX):$(LEpath)/$(1).pem ./certs -L
 
@@ -71,3 +72,57 @@ certs-check:
 .PHONY: certs-clean
 certs-clean:
 	@rm -fv $(CURDIR)/certs/*
+
+TarList := $(wildcard $(D)/*.tar)
+deployedTars := $(patsubst $(D)/%.tar,$(B)/%.txt,$(TarList))
+
+.PHONY: gc-deploy-tars
+gc-deploy-tars: $(patsubst $(D)/%.tar,$(B)/%.txt,$(TarList))
+
+.PHONY: clean-gc-deploy-tars
+clean-gc-deploy-tars: 
+	@rm $(patsubst $(D)/%.tar,$(B)/%.txt,$(TarList))
+
+gcDeploy = $(Gcmd) 'docker run --rm \
+ --mount $(1) \
+ --mount $(GceBindMountDeploy) \
+ --entrypoint "tar" $(2) xvf /tmp/$(3).tar -C /'
+gcDeploy-xqerl-database = $(call gcDeploy,$(MountData),$(XQERL_IMAGE),xqerl-database)
+gcDeploy-xqerl-escripts = $(call gcDeploy,$(MountEscripts),$(XQERL_IMAGE),xqerl-escripts)
+gcDeploy-xqerl-compiled-code = $(call gcDeploy,$(MountCode),$(XQERL_IMAGE),xqerl-compiled-code)
+gcDeploy-static-assets = $(call gcDeploy,$(MountAssets),$(PROXY_IMAGE),static-assets)
+gcDeploy-nginx-configuration = $(call gcDeploy,$(MountNginxConf),$(PROXY_IMAGE),nginx-configuration)
+
+$(B)/%.txt: $(T)/%.txt
+	@mkdir -p $(dir $@)
+	@echo '## $@ ##'
+	@$(call gcDeploy-$(shell grep -oP 'deploy/\K([a-z-]+)' $<)) > $@
+
+$(T)/%.txt: $(D)/%.tar
+	@mkdir -p $(dir $@)
+	@$(Gscp) $(abspath $<) $(GCE_NAME):~/deploy/ &>/dev/null
+	@$(Gcmd) 'ls -al $(patsubst $(D)/%,deploy/%,$(<))' > $@
+
+.PHONY: gc-xq-up
+gc-xq-up:
+	@$(Gcmd) '$(xqRun)'
+
+.PHONY: gc-xq-stop
+gc-xq-stop:
+	@$(Gcmd) 'docker xq stop'
+
+.PHONY: gc-code
+gc-code:
+	@$(Gxq) 'xqerl eval "$(xqOrderedCompile)"'
+
+.PHONY: gc-ngx-up
+gc-ngx-up:
+	@$(Gcmd) '$(ngxRun)'
+
+.PHONY: gc-ngx-restart
+gc-ngx-restart:
+	@echo "## $@ ##"
+	@echo ' - remote test nginx configuration'
+	@$(Gcmd) 'docker exec $(PROXY_CONTAINER_NAME) ./sbin/nginx -t'
+	@echo ' - remote restart'
+	@$(Gcmd) 'docker exec $(PROXY_CONTAINER_NAME) ./sbin/nginx -s reload'
