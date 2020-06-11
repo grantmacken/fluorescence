@@ -8,7 +8,6 @@ This blog is a rework of a previous project, where I initially started to explor
 Like every other blog I'll write and about the stuff I am interested in, which will most likely centre around 'declarative markup' tech.
 Initially I am going to write about, how I am putting this site together.
 
-
 <!--
 - [x] content generated from markdown documents.
 - [x] data stored and retrieved as XDM map items
