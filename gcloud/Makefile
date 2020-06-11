@@ -109,7 +109,7 @@ gc-xq-up:
 
 .PHONY: gc-xq-stop
 gc-xq-stop:
-	@$(Gcmd) 'docker xq stop'
+	@$(Gcmd) 'docker stop xq'
 
 .PHONY: gc-code
 gc-code:
