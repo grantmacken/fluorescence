@@ -41,29 +41,6 @@ ngx-up:
 ngx-down:
 	@$(MAKE) -f .inc/ngxContainer.mk ngx-down
 
-.PHONY: gc-init
-gc-init:
-	@pushd gcloud &>/dev/null
-	@$(if $(GITHUB_ACTIONS),$(MAKE) $@,echo ' NOTE: target can only be run on githb actions')
-	@popd &>/dev/null
-
-.PHONY: certs-into-vol
-certs-into-vol:
-	@pushd gcloud &>/dev/null
-	@$(MAKE) $@
-	@popd &>/dev/null
-
-.PHONY: certs-check
-certs-check:
-	@pushd gcloud &>/dev/null
-	@$(MAKE) $@
-	@popd &>/dev/null
-
-.PHONY: certs-clean
-certs-clean:
-	@pushd gcloud &>/dev/null
-	@$(MAKE) $@
-	@popd &>/dev/null
 
 .PHONY: ngx
 ngx:
@@ -244,3 +221,64 @@ pull-xq-ngx:
 .PHONY: list-compiled-libs
 list-compiled-libs:
 	@$(ESCRIPT) bin/scripts/$(@).escript
+
+
+.PHONY: gc-init
+gc-init:
+	@pushd gcloud &>/dev/null
+	@$(if $(GITHUB_ACTIONS),$(MAKE) $@,echo ' NOTE: target can only be run on githb actions')
+	@popd &>/dev/null
+
+.PHONY: certs-into-vol
+certs-into-vol:
+	@pushd gcloud &>/dev/null
+	@$(MAKE) $@
+	@popd &>/dev/null
+
+.PHONY: certs-check
+certs-check:
+	@pushd gcloud &>/dev/null
+	@$(MAKE) $@
+	@popd &>/dev/null
+
+.PHONY: certs-clean
+certs-clean:
+	@pushd gcloud &>/dev/null
+	@$(MAKE) $@
+	@popd &>/dev/null
+
+.PHONY: gc-deploy-tars
+gc-deploy-tars:
+	@pushd gcloud &>/dev/null
+	@$(MAKE) $@
+	@popd &>/dev/null
+
+.PHONY: clean-gc-deploy-tars
+clean-gc-deploy-tars:
+	@pushd gcloud &>/dev/null
+	@$(MAKE) $@
+	@popd &>/dev/null
+
+.PHONY: gc-xq-up
+gc-xq-up:
+	@pushd gcloud &>/dev/null
+	@$(MAKE) $@
+	@popd &>/dev/null
+
+.PHONY: gc-ngx-up
+gc-ngx-up:
+	@pushd gcloud &>/dev/null
+	@$(MAKE) $@
+	@popd &>/dev/null
+
+.PHONY: gc-code
+gc-code:
+	@pushd gcloud &>/dev/null
+	@$(MAKE) $@
+	@popd &>/dev/null
+
+.PHONY: gc-ngx-restart
+gc-ngx-restart:
+	@pushd gcloud &>/dev/null
+	@$(MAKE) $@
+	@popd &>/dev/null
