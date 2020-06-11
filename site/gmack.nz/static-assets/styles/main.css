@@ -36,7 +36,9 @@
   --alt: hsla(var(--alt-h),var(--alt-s),var(--alt-l),.5); /* #1d3a05; */
   --bg-alt: hsla(var(--alt-h),var(--alt-s),var(--alt-l-darker),1); /* #1d3a05; */
   --bg-url: '/icons/mackenzie';
-  --font-size: min(max(1rem, calc(1rem + ((1vw - 0.48rem) * 0.6944))), 1.5rem);
+  --font-size: min(max(1rem, 4vw), 22px);
+
+  /* min(max(1rem, calc(1rem + ((1vw - 0.48rem) * 0.6944))), 1.5rem); */
   --font-text: 'IBM Plex Serif', 'Georgia', Times, serif;
   --font-headings: 'IBM Plex Sans', 'Helvetica Neue', Arial, sans-serif;
   --font-code: 'IBM Plex Mono', 'Menlo', 'DejaVu Sans Mono', 'Bitstream Vera Sans Mono', Courier, monospace;
@@ -70,29 +72,36 @@ html {
   line-height: 1.5;
   color: #222;
   background-color: var(--bg-hsl); /* #c1cad1 */
-  font-size: 125%;
+  font-size:  var(--font-size);
   color: var(--clr-hsl);
 }
 
 body {
   display: flex;
   height: 100vh;
+  width: 100%;
   flex-direction: column;
   flex-wrap: nowrap;
+  overflow: hidden;
   width: 100%;
 }
 
 header {
+  flex-grow: 1;
   display: flex;
+  flex-direction: row;
   align-items: center;
   justify-content: center;
   /* color: var( --clr-comlementary ); */
-  min-height: 10vh;  
+  /* min-height: 10vh; */
+  max-height: 10vh;
   font-family: var(--font-headings);
-  font-size: 2.25rem;
+  font-size: 1.75em;
+  font-weight: 700;
 }
 
 nav[aria-label=Breadcrumb] {
+  width: 100%;
   /* display: block; */
   display: flex;
   background-color: var(--alt); /* #1f3d06 *1/ */
@@ -125,6 +134,7 @@ nav[aria-label=Breadcrumb] {
 }
 
 main {
+  width: 100%;
   flex-grow: 1;
   flex-shrink: 0;
   display: flex;
@@ -200,18 +210,18 @@ h2 {
 
 h1 {
   margin: 0.67em 0;
-  font-size: 2.25rem;
+  font-size: 1.75rem;
   letter-spacing: 0.125em;
   line-height: 1.2;
 }
 
 h2 {
-  font-size: 1.75em;
+  font-size: 1.5em;
   line-height: 1.225;
 }
 
 h3 {
-  font-size: 1.5em;
+  font-size: 1.2em;
   line-height: 1.43;
   /* color: #6a737d; */
 }
