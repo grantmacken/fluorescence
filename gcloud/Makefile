@@ -126,3 +126,18 @@ gc-ngx-restart:
 	@$(Gcmd) 'docker exec $(PROXY_CONTAINER_NAME) ./sbin/nginx -t'
 	@echo ' - remote restart'
 	@$(Gcmd) 'docker exec $(PROXY_CONTAINER_NAME) ./sbin/nginx -s reload'
+
+.PHONY: gc-init-dirs
+gc-init-dirs:
+	@echo "## $@ ##"
+	@echo ' - once off, set up stuff'
+	@echo 'set up dir structure on static-assets volume ... '
+	@$(Gcmd) 'docker run --rm --mount $(MountAssets) --entrypoint "sh" $(PROXY_IMAGE) \
+ -c "\
+ mkdir -p  html/$(DOMAIN)/static-assets/fonts && \
+ mkdir -p  html/$(DOMAIN)/static-assets/icons && \
+ mkdir -p  html/$(DOMAIN)/static-assets/images && \
+ mkdir -p  html/$(DOMAIN)/static-assets/scripts && \
+ mkdir -p html/$(DOMAIN)/static-assets/styles"'
+	@$(Gcmd) 'docker run --rm --mount $(MountAssets) --entrypoint "sh" $(PROXY_IMAGE) \
+ -c "ls -R html/$(DOMAIN)"'
