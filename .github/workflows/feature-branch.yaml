@@ -61,11 +61,10 @@ jobs:
         path: deploy/nginx-configuration.tar
     - name: Build 'static assets' from src files and put into 'static-assets' volume
       run: |
-          source .env
-          echo " - build static assets for [ ${DOMAIN} ]"
+          # build the directories on *static-assets* volume
+          make init-assets
+          # the build artifact is the **static-assets.tar**'
           make assets
-          echo ' - the build artifact is the **static-assets.tar**'
-          ls -al deploy/static-assets.tar
     - name: Create static-assets artifact
       uses: actions/upload-artifact@v2
       with:
