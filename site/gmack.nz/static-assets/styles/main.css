@@ -41,7 +41,7 @@
   /* min(max(1rem, calc(1rem + ((1vw - 0.48rem) * 0.6944))), 1.5rem); */
   --font-text: 'IBM Plex Serif', 'Georgia', Times, serif;
   --font-headings: 'IBM Plex Sans', 'Helvetica Neue', Arial, sans-serif;
-  --font-code: 'IBM Plex Mono', 'Menlo', 'DejaVu Sans Mono', 'Bitstream Vera Sans Mono', Courier, monospace;
+  --font-code: 'Fira Code','IBM Plex Mono', 'Menlo', 'DejaVu Sans Mono', 'Bitstream Vera Sans Mono', Courier, monospace;
   --font-lists: 'IBM Plex Sans Condensed', 'Helvetica Neue', Arial, sans-serif;
 
   /* min-height: 0vw; */
@@ -82,8 +82,6 @@ body {
   width: 100%;
   flex-direction: column;
   flex-wrap: nowrap;
-  overflow: hidden;
-  width: 100%;
 }
 
 header {
@@ -188,7 +186,7 @@ footer {
 
 /* BLOCK TYPOGRAPHY */
 
-article + * {
+article * + * {
  margin-top: 1.5em;
 }
 
@@ -274,3 +272,15 @@ li {
 span[aria-current=page] {
 }
 
+
+pre, code {
+	color: #a9b7c6;
+  font-family: var( --font-code);
+  tab-size: 2;
+  hyphens: none;
+}
+
+code {
+  font-size: smaller;
+
+}
