@@ -41,7 +41,6 @@ ngx-up:
 ngx-down:
 	@$(MAKE) -f .inc/ngxContainer.mk ngx-down
 
-
 .PHONY: ngx
 ngx:
 	@pushd proxy &>/dev/null
@@ -74,8 +73,6 @@ proxy-info:
 xq-up:
 	@$(MAKE) -f .inc/xqContainer.mk
 
-
-
 .PHONY: clean-xq-run
 clean-xq-run:
 	@# in case of unclean shutdowm
@@ -92,7 +89,6 @@ xq-info:
 .PHONY: xq-info-more
 xq-info-more:
 	@$(MAKE) -f .inc/xqContainer.mk $@
-
 
 .PHONY: xq-build
 xq-build:
@@ -162,17 +158,52 @@ clean-code:
 	@$(MAKE) $@
 	@popd &>/dev/null
 
+
+
 .PHONY: assets
 assets:
 	@pushd site/$(DOMAIN) &>/dev/null
 	@$(MAKE) $@
 	@popd &>/dev/null
 
+.PHONY: init-assets
+init-assets:
+	@pushd site/$(DOMAIN) &>/dev/null
+	@$(MAKE) $@
+	@popd &>/dev/null
+
+
 .PHONY: clean-assets
 clean-assets:
 	@pushd site/$(DOMAIN) &>/dev/null
 	@$(MAKE) $@
 	@popd &>/dev/null
+
+.PHONY: scripts
+scripts:
+	@pushd site/$(DOMAIN) &>/dev/null
+	@$(MAKE) $@
+	@popd &>/dev/null
+
+.PHONY: clean-scripts
+clean-scripts:
+	@pushd site/$(DOMAIN) &>/dev/null
+	@$(MAKE) $@
+	@popd &>/dev/null
+
+.PHONY: styles
+styles:
+	@pushd site/$(DOMAIN) &>/dev/null
+	@$(MAKE) $@
+	@popd &>/dev/null
+
+.PHONY: clean-styles
+clean-styles:
+	@pushd site/$(DOMAIN) &>/dev/null
+	@$(MAKE) $@
+	@popd &>/dev/null
+
+####################################################
 
 .PHONY: xqerl-database-tar-deploy
 xqerl-database-tar-deploy:
@@ -222,6 +253,7 @@ pull-xq-ngx:
 list-compiled-libs:
 	@$(ESCRIPT) bin/scripts/$(@).escript
 
+########################################################
 
 .PHONY: gc-init
 gc-init:
@@ -288,18 +320,11 @@ gc-code:
 	@$(MAKE) $@
 	@popd &>/dev/null
 
-
-
-
-
-
 .PHONY: gc-ngx-restart
 gc-ngx-restart:
 	@pushd gcloud &>/dev/null
 	@$(MAKE) $@
 	@popd &>/dev/null
-
-
 
 .PHONY: gc-ngx-up
 gc-ngx-up:
