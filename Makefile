@@ -332,6 +332,10 @@ gc-ngx-up:
 	@$(MAKE) $@
 	@popd &>/dev/null
 
-
+.PHONY: gc-init-dirs
+gc-init-dirs:
+	@pushd gcloud &>/dev/null
+	@$(MAKE) $@
+	@popd &>/dev/null
 
 
