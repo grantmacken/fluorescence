@@ -6,7 +6,7 @@ declare
 function render:home( $map as map(*) ) as element() {
   element html {
     attribute lang {'en'},
-    $map =>render:head(),
+    $map => render:head(),
     element body {
       $map => render:header(),
       $map => render:nav(),
@@ -185,14 +185,22 @@ element head {
     attribute type { 'text/html' }
     },
   element link {
-    attribute href { '/styles' },
-    attribute rel { 'Stylesheet' },
+    attribute href { '/styles/main' },
+    attribute rel { 'stylesheet' },
+    attribute type { 'text/css' }
+    },
+  element link {
+    attribute href { '/styles/prism' },
+    attribute rel { 'stylesheet' },
     attribute type { 'text/css' }
     },
   element link {
     attribute href { $map?author?logo },
     attribute rel { 'icon' },
     attribute type { 'image/svg+xml' }
+    },
+  element script {
+    attribute src { '/scripts/prism' }
     }
   }
 };
