@@ -17,59 +17,51 @@ jobs:
       uses: actions/checkout@v2
       with:
           fetch-depth: 1
-    - name: Set environment variables
-      run: |
-          source .env
-          echo '::set-env name=TERM::xterm'
     - name: Pull in my docker images
-      run: |
-          #source .env
-          # docker login docker.pkg.github.com --username ${REPO_OWNER} --password ${{ secrets.github_token }} &>/dev/null
-          echo ' - pull in main docker images'
-          make pull-pkgs
-    - name: untar data  into 'xqerl database' volume
-      run: |
-        make db-tar-deploy
-        docker volume list
+      run: echo '::set-env name=TERM::xterm' && make pull-pkgs
+    - name: Put xqerl escripts into 'xqerl-escripts' volume
+      run: make escript
+    - name: Create xqerl-escripts artifact
+      uses: actions/upload-artifact@v2
+      with:
+        name: xqerl-escripts
+        path: deploy/xqerl-escripts.tar
+    - name: Untar data  into 'xqerl database' volume
+      run: make xqerl-database-tar-deploy
+    - name: Create xqerl-database artifact
+      uses: actions/upload-artifact@v2
+      with:
+        name: xqerl-database
+        path: deploy/xqerl-database.tar
     - name: Bring up the xqerl container
-      run: |
-          echo ' starting xqerl will also: '
-          echo ' - create the all the volumes we require for xqerl and the nginx proxy'
-          echo ' - create the network we require'
-          make xq-up
-          docker volume list
-          make xq-info
-    - name: build compiled xQuery files to run on the beam, then put into 'xqerl-compiled-code' volume
-      run: |
-          make code
-          echo ' - check what we have running on the beam'
-          make xq-info-more
-          make check-xq-routes-more
+      run: make xq-up && make xq-info
+    - name: Build compiled xQuery files to run on the beam, then put into 'xqerl-compiled-code' volume
+      run: make code
+    - name: Check xq running xqerl on the 'github actions' host
+      run: make xq-info-more
+    - name: Reachable routes - use curl to check restXQ resolvable routes.
+      run: make check-xq-routes
+          # note if restXQ routes checkout OK then
+          # routes to statis assets will not resolve as they rely on the proxy
     - name: Create xqerl-compiled-code artifact
       uses: actions/upload-artifact@v2
       with:
         name: xqerl-compiled-code
         path: deploy/xqerl-compiled-code.tar
-    - name: Build 'nginx configuration files' from src files and put into 'nginx-configuration' volume
-      run: |
-          make ngx
-          ls -al deploy
-    - name: Create nginx-configuration artifact
-      uses: actions/upload-artifact@v2
-      with:
-        name: nginx-configuration
-        path: deploy/nginx-configuration.tar
     - name: Build 'static assets' from src files and put into 'static-assets' volume
-      run: |
-          # build the directories on *static-assets* volume
-          make init-assets
-          # the build artifact is the **static-assets.tar**'
-          make assets
+      run: make init-assets && make assets
     - name: Create static-assets artifact
       uses: actions/upload-artifact@v2
       with:
         name: static-assets
         path: deploy/static-assets.tar
+    - name: Build 'nginx configuration files' from src files and put into 'nginx-configuration' volume
+      run: make ngx
+    - name: Create nginx-configuration artifact
+      uses: actions/upload-artifact@v2
+      with:
+        name: nginx-configuration
+        path: deploy/nginx-configuration.tar
     - name: Setup Google Cloud Platform
       uses: GoogleCloudPlatform/github-actions/setup-gcloud@master
       with:
