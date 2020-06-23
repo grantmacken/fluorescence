@@ -42,7 +42,7 @@ translate(., '$', '')
 :)
 declare
 function posts:postKindDiscovery( $body as document-node() ) {
-if ( $body//cm:heading[1] instance of element() ) 
+if ( $body//cm:heading[1] instance of element() )
 then ( 'article')
 else ( 'note')
 };
@@ -82,13 +82,11 @@ function posts:getKeyCollection( $m, $mOriginFM, $doc ) as map(*) {
                           $mOriginFM?collection => 
                           normalize-space() =>
                           translate(' ','-')) )
-  else if ( $mOriginFM => map:contains('title') ) 
+  else if ( $mOriginFM => map:contains('slug') ) 
     then  ( $m => map:put( 'collection','article') )
   else if ( $doc//cm:heading[1] instance of element() )
     then  ( $m => map:put( 'collection','article') )
   else ( $m => map:put( 'collection', 'note' ) )
-
-  
     } catch * {
    error(xs:QName( 'ERROR' ),
          'could not establish item for collection', 
@@ -98,7 +96,6 @@ function posts:getKeyCollection( $m, $mOriginFM, $doc ) as map(*) {
   }
 };
 
-
 declare
 function posts:getKeyItem( $m, $mOriginFM, $doc ) as map(*) {
  try{ 
@@ -106,12 +103,11 @@ function posts:getKeyItem( $m, $mOriginFM, $doc ) as map(*) {
       then ( $m => map:put( 'item', 'index' ) )
     else if ( $m?collection eq 'article' )
       then (
-          if ( $mOriginFM => map:contains('title') ) 
-            then  ( $m => map:put( 'item', $mOriginFM?title => 
+          if ( $mOriginFM => map:contains('slug') ) 
+            then  ( $m => map:put( 'item', $mOriginFM?slug => 
                                         normalize-space() => 
                                         translate(' ','-') =>
                                         lower-case() ) )
-
           else if ( $doc//cm:heading[1]/cm:text[1] instance of element() )
             then  ( $m => map:put( 'item', $doc//cm:heading[1]//cm:text[1]/string() =>
                                         normalize-space() => 
@@ -133,8 +129,6 @@ function posts:getKeyItem( $m, $mOriginFM, $doc ) as map(*) {
       )
   }
 };
-
-
 
 
 (:~
@@ -181,14 +175,6 @@ try {
     }
   }
 };
-
-
-(:
-
-
-
-:)
-
 
 (:~
 recursive typeswitch descent for a commonmark XML document

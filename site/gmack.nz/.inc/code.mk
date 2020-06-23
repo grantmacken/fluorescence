@@ -5,6 +5,16 @@
 ModuleList := newBase60 maps req_res render posts routes
 # render_feed render_note micropub routes
 CodeBuildList  := $(patsubst %,$(B)/code/%.xqm,$(ModuleList))
+
+compiledLibs := 'BinList = xqerl_code_server:library_namespaces(),\
+ NormalList = [binary_to_list(X) || X <- BinList],\
+ io:fwrite("~1p~n",[lists:sort(NormalList)]).'
+
+#  EXPANSIONS
+DEX := docker exec $(XQ)
+EVAL := $(DEX) xqerl eval
+ESCRIPT := $(DEX) xqerl escript
+
 # CALLS
 compile =  $(ESCRIPT) bin/scripts/compile.escript ./code/src/$1
 
@@ -52,37 +62,3 @@ $(T)/compile_result/%.txt: code/%.xqm
 	@# check: routes do not return 500 status
 	@# $(MAKE) -silent routes 
 
-.PHONY: check-xq-routes
-check-xq-routes: home-page
-
-.PHONY: check-xq-routes-more
-check-xq-routes-more: home-page-more
-
-.PHONY: clean-routes
-clean-routes:
-	@rm -f $(T)/check_route/*
-
-.PHONY: home-page
-home-page: $(T)/check_route/home-page
-	@mkdir -p $(dir $@)
-	@echo 'check route [ $@ ]'
-	@$(call ServesHeader,$(dir $<)/headers-$(notdir $<),HTTP/1.1 200, - status OK!)
-	@$(call HasHeaderKeyShowValue,$(dir $<)/headers-$(notdir $<),content-type)
-
-.PHONY: home-page-more
-home-page-more: $(T)/check_route/home-page
-	@mkdir -p $(dir $@)
-	@echo 'check route [ $@ ]'
-	@echo;printf %60s | tr ' ' '-' && echo
-	@cat $<
-	@echo;printf %60s | tr ' ' '-' && echo
-	@cat $(dir $<)/headers-$(notdir $<)
-	@echo;printf %60s | tr ' ' '-' && echo
-	@cat $(dir $<)/doc-$(notdir $<)
-	@echo;printf %60s | tr ' ' '-' && echo
-	@$(call ServesHeader,$(dir $<)/headers-$(notdir $<),HTTP/1.1 200, - status OK!)
-	@$(call HasHeaderKeyShowValue,$(dir $<)/headers-$(notdir $<),content-type)
-
-$(T)/check_route/home-page:
-	@mkdir -p $(dir $@)
-	@$(call GET,/,$@)

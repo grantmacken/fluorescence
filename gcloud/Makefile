@@ -119,6 +119,10 @@ gc-code:
 gc-ngx-up:
 	@$(Gcmd) '$(ngxRun)'
 
+.PHONY: gc-ngx-stop
+gc-ngx-stop:
+	@$(Gcmd) 'docker stop ngx'
+
 .PHONY: gc-ngx-restart
 gc-ngx-restart:
 	@echo "## $@ ##"
@@ -127,11 +131,12 @@ gc-ngx-restart:
 	@echo ' - remote restart'
 	@$(Gcmd) 'docker exec $(PROXY_CONTAINER_NAME) ./sbin/nginx -s reload'
 
-.PHONY: gc-init-dirs
-gc-init-dirs:
+.PHONY: gc-once
+gc-once:
 	@echo "## $@ ##"
 	@echo ' - once off, set up stuff'
 	@echo 'set up dir structure on static-assets volume ... '
+	$(Gcmd) 'docker network create $(NETWORK)'
 	@$(Gcmd) 'docker run --rm --mount $(MountAssets) --entrypoint "sh" $(PROXY_IMAGE) \
  -c "\
  mkdir -p  html/$(DOMAIN)/static-assets/fonts && \

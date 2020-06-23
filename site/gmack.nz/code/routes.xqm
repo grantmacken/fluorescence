@@ -23,66 +23,6 @@ declare variable $routes:ok := res:status(200);
 declare variable $routes:ohNo := res:not_found();
 declare variable $routes:author := maps:myCard();
 
-declare
-  %rest:path("/gmack.nz/")
-  %rest:GET
-  %rest:produces("text/html")
-  %output:method("html")
-function routes:home(){
- try {
-  let $sCollection := 'home'
-  let $sItem := 'index'
-  let $sType := 'entry'
-  let $pubURL := string-join(($routes:pubBase,$sCollection,$sItem),'/' )
-  let $dbCollection := string-join(($routes:dbBase,$sType,$sCollection),'/' )
-  let $dbItem  := string-join(($routes:dbBase,$sType,$sCollection,$sItem),'/' )
-  let $errDetail := ``[could not find HTTP resource at `{$pubURL}` ]``
-  let $map := 
-    if ( $dbItem = uri-collection( $dbCollection ) )
-    then ( db:get( $dbItem ) )
-    else (error(xs:QName( 'ERROR' ), 'description' , map { 'status': 404, 'detail': $errDetail }) )
-
-  let $render :=
-   try {
-    $map =>  render:home()
-   } catch * { 
-      error ( 
-        xs:QName( 'ERROR' ), 
-        'could not render home page', 
-        map { 'status': 404,
-              'detail': 'TODO errors in render code' 
-  })}
-
-
-
-(:
-  let $QName := QName("http://gmack.nz/#render",$sCollection)
-  let $fRender := 
-   try { 
-   function-lookup($QName,1)
-   } catch * {error(xs:QName( 'ERROR' ), 'description' , map { 'status': 404, 'detail': 'TODO need to build  render code' })}
-
-  let $HTML :=
-    $map =>  $fRender()
-   } catch * {error(xs:QName( 'ERROR' ), 'description' , map { 'status': 404, 'detail': 'TODO errors in render code' })}
-
-
-  let $renderFunc := function-name($fRender)
-:)
-return (
-  $routes:ok,
-  $render
- )} catch * {(
-  map { 'code' : $err:code,
-        'description' : $err:description,
-        'value' : $err:value
-      } => res:htmlErr(),
-  map { 'code' : $err:code,
-        'description' : $err:description,
-        'value' : $err:value
-      } => render:problem()
-  )}
-};
 
 declare
   %rest:path("/gmack.nz/_template")
@@ -95,8 +35,8 @@ function routes:template(){
   let $sItem := 'another-title'
   let $sType := 'entry'
   let $pubURL       := string-join(($routes:pubBase,$sCollection,$sItem),'/' )
-  let $dbCollection := string-join(($routes:dbBase,$sType,$sCollection),'/' )
-  let $dbItem       := string-join(($routes:dbBase,$sType,$sCollection,$sItem),'/' )
+  let $dbCollection := string-join(($routes:dbBase,$sCollection),'/' )
+  let $dbItem       := string-join(($routes:dbBase,$sCollection,$sItem),'/' )
   let $map := 
     if ( $dbItem = uri-collection( $dbCollection ) )
     then ( db:get( $dbItem ) )
@@ -149,92 +89,6 @@ return (
       } => render:problem()
   )}
 };
-
-(:
-if ( $err:value instance of map(*) ) then (
-      'value' : $err:value
-      ) else (
-      'value' : ''
-      )
-:)
-
-declare
-  %rest:path("/gmack.nz/{$sCollection}")
-  %rest:GET
-  %rest:produces("text/html")
-  %output:method("html")
-function routes:collectionIndex( $sCollection ){
- try {
-  (:let $sCollection := 'article' :)
-  let $sItem := 'index'
-  let $sType := 'entry'
-  let $pubURL       := string-join(($routes:pubBase,$sCollection),'/' )
-  let $dbCollection := string-join(($routes:dbBase,$sType,$sCollection),'/' )
-  let $dbItem       := string-join(($routes:dbBase,$sType,$sCollection,$sItem),'/' )
-  let $map := 
-    if ( $dbItem = uri-collection( $dbCollection ) )
-    then ( db:get( $dbItem ) )
-    else ( error( xs:QName( 'ERROR' ),
-                  'not found',
-                  map { 'status': 404,
-                        'detail':``[could not find HTTP resource at `{$pubURL}` ]``}
-          ))
-
-
-  let $sItem := 'index'
-  let $sType := 'entry'
-  let $pubURL := string-join(($routes:pubBase,$sCollection,$sItem),'/' )
-  let $dbCollection := string-join(($routes:dbBase,$sType,$sCollection),'/' )
-  let $dbItem  := string-join(($routes:dbBase,$sType,$sCollection,$sItem),'/' )
-  let $errDetail := ``[could not find HTTP resource at `{$pubURL}` ]``
-  let $map := 
-    if ( $dbItem = uri-collection( $dbCollection ) )
-    then ( db:get( $dbItem ) )
-    else (error(xs:QName( 'ERROR' ), 'description' , map { 'status': 404, 'detail': $errDetail }) )
- (: render part :)
-  let $fName := if ( $sItem eq 'index' )
-                then ( $sCollection || '_' || $sItem )
-                else ( $sCollection )
-  let $QName := QName( "http://gmack.nz/#render", $fName )
-  let $fRender :=
-   try {
-   function-lookup($QName,1)
-   } catch * { 
-       error ( 
-         xs:QName( 'ERROR' ),
-         'not implimented',
-         map { 'status': 501,
-              'detail': 'TODO need to build  render code' 
-            }
-         )
-      }
-  let $render :=
-   try {
-    $map =>  $fRender()
-   } catch * {
-       error (
-         xs:QName( 'ERROR' ), 
-         'could not render page', 
-         map { 'status': 404,
-               'detail': 'TODO errors in render code' 
-           }
-        )
-     }
-return (
-  $routes:ok,
-  $render
- )} catch * {(
-  map { 'code' : $err:code,
-        'description' : $err:description,
-        'value' : $err:value
-      } => res:htmlErr(),
-  map { 'code' : $err:code,
-        'description' : $err:description,
-        'value' : $err:value
-      } => render:problem()
-  )}
-};
-
 
 declare
   %rest:path("/gmack.nz/{$sCollection}/{$sItem}")
@@ -245,8 +99,8 @@ function routes:collection-item( $sCollection, $sItem ){
  try {
   let $sType := 'entry'
   let $pubURL       := string-join(($routes:pubBase,$sCollection,$sItem),'/' )
-  let $dbCollection := string-join(($routes:dbBase,$sType,$sCollection),'/' )
-  let $dbItem       := string-join(($routes:dbBase,$sType,$sCollection,$sItem),'/' )
+  let $dbCollection := string-join(($routes:dbBase,$sCollection),'/' )
+  let $dbItem       := string-join(($routes:dbBase,$sCollection,$sItem),'/' )
   let $map := 
     if ( $dbItem = uri-collection( $dbCollection ) )
     then ( db:get( $dbItem ) )
@@ -298,140 +152,102 @@ return (
         'value' : $err:value
       } => render:problem()
   )}
-
 };
 
-
 declare
-  %rest:path("/gmack.nz/_db")
+  %rest:path("/gmack.nz/{$sCollection}/{$sItem}")
   %rest:GET
+  %rest:header-param( "Accept", "{$mimeType}", "application/json")
   %rest:produces("application/json")
   %output:method("json")
-function routes:db(){
-  try  {
-  let $sCollection := 'article'
-  let $sItem := 'another-title'
+function routes:api-get-json( $mimeType, $sCollection, $sItem ){
+try {
   let $sType := 'entry'
-  let $dbCollection := string-join(($routes:dbBase,$sType,$sCollection),'/' )
-  let $dbItem  := string-join(($routes:dbBase,$sType,$sCollection,$sItem),'/' )
+  let $dbCollection := string-join(($routes:dbBase,$sCollection),'/' )
+  let $dbItem       := string-join(($routes:dbBase,$sCollection,$sItem),'/' )
   let $map := 
     if ( $dbItem = uri-collection( $dbCollection ) )
     then ( db:get( $dbItem ) )
-    else (error(xs:QName( 'ERROR' ), 'item not in collection' , map { 'status': 404, 'detail': 'TODO' }) )
-  return (
+    else ( error( xs:QName( 'ERROR' ),
+                  'not found',
+                  map { 'status': 404,
+                        'detail':``[could not find db resource at `{$dbItem}` ]``}
+          ))
+return (
   res:status( 200 , "application/json" ),
-  $map
-  )} catch * { (
-  res:status(  $err:value?status , "application/json" ),
-  map { 
-    'code' : '$err:code',
-    'title' : $err:description,
-    'status' : $err:value?status,
-    'detail' : $err:value?detail
-    }
-  )
- }
+ $map => 
+ map:remove( 'content' ) =>
+  map:remove( 'author' )
+  )} catch * {(
+  map { 'code' : $err:code,
+        'description' : $err:description,
+        'value' : $err:value
+      } => res:htmlErr(),
+  map { 'code' : $err:code,
+        'description' : $err:description,
+        'value' : $err:value
+      } => render:problem()
+  )}
 };
 
 declare
-  %rest:path("/gmack.nz/_test")
-  %rest:GET
-  %rest:produces("text/html")
-  %output:method("html")
-function routes:_test(){
-  let $QName := QName("http://gmack.nz/#render",'paragraph')
-  let $func := function-lookup($QName,1)
-  let $fName := function-name($func)
-  (:res is a map:)
-  let $res := db:get('http://xq/gmack.nzentry/home/index')
-  return (
- $routes:ok,
-  element html {
-    attribute lang {'en'},
-    render:head( map { 'entry' : map  { 'name' : 'index' } } ),
-    element body {
-      element main {
-        attribute class { 'container' },
-        element article  {
-           element div {  'http://xq/gmack.nz/entry/home/index' = fn:uri-collection('http://xq/gmack.nz/entry/home') },
-           element p { doc-available('http://xq/gmack.nz/entry/home/index') },
-           element p { unparsed-text-available('http://xq/gmack.nz/entry/home/index') },
-           element div { $res instance of map(*)  }
-          }
-      }
-    }
-  }
-)};
-
-declare
-  %rest:path("/gmack.nz/_api")
-  %rest:GET
-  %rest:produces("application/json")
+  %rest:path('/gmack.nz/{$sCollection}/{$sItem}')
+  %rest:PUT('{$xBody}' )
+  %rest:consumes("application/xml", "text/xml")
   %output:method("json")
-function routes:_api(){
- try {
-  let $x := random:integer(100)
-  let $res :=
-      if ( $x gt 50 )  then (
-         fn:error(xs:QName( 'ERROR' ), 'description' , map { 'status': 500, 'detail': 'over 50'}  )
-        ) 
-     else (
-          "Less than or equal to 50"
+  %updating
+function routes:api-put-xml( $xBody, $sCollection, $sItem ){
+try {
+  let $mSentFM :=
+    if ( $xBody instance of document-node() ) 
+      then (
+        posts:fmToMap( $xBody )
+      )
+    else (
+      error(xs:QName( 'ERROR' ),
+         'did not send commonmark XML document',
+         map { 'status': 400,
+               'detail': 'failure to PUT document' }
         )
+      )
 
 
-  return ( 
+  let $sType := 'entry'
+  let $dbCollection := string-join(($routes:dbBase,$sCollection),'/' )
+  let $dbItem       := string-join(($routes:dbBase,$sCollection,$sItem),'/' )
+  let $hContent :=  map:entry( 'content', posts:dispatch( $xBody  ))
+  let $mDB :=
+    if ( $dbItem = uri-collection( $dbCollection ) )
+    then ( 
+      db:get( $dbItem ) => 
+      map:remove('content')
+    )
+    else ( error( xs:QName( 'ERROR' ),
+                  'not found',
+                  map { 'status': 404,
+                        'detail':``[could not find db resource at `{$dbItem}` ]``}
+          ))
+  let $mDups := map{ 'duplicates': 'use-first'} 
+  let $map := 
+      map:merge(( $mSentFM, $hContent,  $mDB  ),$mDups ) =>
+      map:put( 'post-status', 'updated' )
+
+  return (
+  $map => db:put( $map?uid ),
   res:status( 200 , "application/json" ),
- map { 'int' : $x, 'res' : $res }
-)
- } catch * { (
-  res:status(  $err:value?status , "application/json" ),
-  map { 
-    'code' : '$err:code',
-    'title' : $err:description,
-    'status' : $err:value?status,
-    'detail' : $err:value?detail
-    }
-  )
- }
-};
-
-
-
-(:
-$fm//node()
-  $fm instance of document-node()
-
-  $fm/*/preceding-sibling::comment() instance of comment()
-  http://172.18.0.2:8081
-
-  } catch * { error(
-   QName('http://xq/err',
-         'OhNo'),
-   'Unable to parse')
-  }
-  try{ 
-    (
-https://tools.ietf.org/html/rfc7807
-  let $jFM := posts:fmToMap( $body )
-  return 
-  if ( $jFM('type') eq  'http:/xq/probs/unparsable' ) then (
-    res:status( $jFM?status , "application/xml" ),
-    render:problem( $jFM )
-    )
-  else (
-    fn:put($body, 'http://xq/gmack.nz/posts/' || 'test.xml' ),
-    res:status( 200 , "application/xml" ),
-    $jFM instance of map(*)
-    )
-:)
-declare
-  %rest:path("/gmack.nz/_posts")
-  %rest:GET
-  %rest:produces("application/json")
-  %output:method("json")
-function routes:get_posts( ){
-  map {}
+  $map => 
+  map:remove('author') => 
+  map:remove('content')
+ )} catch * {(
+  map { 'code' : $err:code,
+        'description' : $err:description,
+        'value' : $err:value
+      } => res:jsonErr(),
+  map { 'code' : $err:code,
+        'description' : $err:description,
+        'value' : $err:value
+      }
+  )}
 };
 
 declare
@@ -464,10 +280,15 @@ function routes:posts( $xBody ){
         map:put('type', 'entry' )
     }
 
+  let $keyPostStatus :=
+    function ( $m as map(*) ) as map(*) {
+       $m => map:put( 'post-status', 'created') 
+    }
+
   let $keyName :=
     function ( $m as map(*) ) as map(*) {
-      if ( $mOriginFM =>  map:contains( 'title' ) )
-      then ( $m => map:put( 'name', $mOriginFM?title ) )
+      if ( $mOriginFM =>  map:contains( 'slug' ) )
+      then ( $m => map:put( 'name', $mOriginFM?slug ) )
       else ( $m ) (: TODO look for heading or truncated first para :)
     }
 
@@ -476,18 +297,18 @@ function routes:posts( $xBody ){
     function ( $m as map(*) ) as map(*) {
       $m  => 
       map:put( 'uid',
-               (  $routes:dbBase,
-                 $m?type,
+               ( $routes:dbBase,
                  $mModFM?collection,
                  $mModFM?item
                ) => string-join('/'))
     }
 
+  (: the www pemalink :)
   let $keyUrl :=
     function ( $m as map(*) ) as map(*) {
       if ( map:get($mModFM,'item') eq 'index' ) 
       then (
-        if ( map:get($mModFM,'collection') eq 'home' ) 
+        if ( map:get($mModFM,'collection') eq 'home' )
         then ($m  => map:put( 'url', $routes:pubBase ) )
         else ( $m  => map:put( 'url', 
                                ( $routes:pubBase,
@@ -525,6 +346,7 @@ function routes:posts( $xBody ){
       map {} =>
       $keyType() =>
       $keyName() =>
+      $keyPostStatus() =>
       $keyUid() =>
       $keyUrl() =>
       $keyPublished() =>
@@ -548,15 +370,16 @@ function routes:posts( $xBody ){
   let $fRender := function-lookup($QName,1)
   let $renderFunc := function-name($fRender)
 :)
-  return (   
-  (: $map => $fRender() => put($map?uid) , :)
+  return (
   $map => db:put( $map?uid ),
-   res:created( $map?url ),
-  map:merge(($map, map { 'mod': $mModFM }) )
+  res:created( $map?uid ),
+  $map => 
+  map:remove('author') => 
+  map:remove('content')
 )
  } catch * { (
   res:status(  $err:value?status , "application/json" ),
-  map { 
+  map {
     'code' : '$err:code',
     'title' : $err:description,
     'status' : $err:value?status,
@@ -567,19 +390,34 @@ function routes:posts( $xBody ){
 
 };
 
-(:
 
-  element body {
-    element p { ``[ publish url: `{$map?url}`]`` },
-    element p { ``[ db uri as uid : `{$map?uid}`]`` },
-    element p { ``[ published: `{$map?published}`]`` },
-    element p { ``[ item: `{$mModFM?item}`]`` },
-    element p { ``[ collection: `{$mModFM?collection}`]`` },
-    element p { ``[ render: `{ function-name($fRender)}`]`` },
-    $map?content
+declare
+  %rest:path("/gmack.nz/_test")
+  %rest:GET
+  %rest:produces("text/html")
+  %output:method("html")
+function routes:_test(){
+  let $QName := QName("http://gmack.nz/#render",'paragraph')
+  let $func := function-lookup($QName,1)
+  let $fName := function-name($func)
+  (:res is a map:)
+  let $res := db:get('http://xq/gmack.nzentry/home/index')
+  return (
+ $routes:ok,
+  element html {
+    attribute lang {'en'},
+    render:head( map { 'entry' : map  { 'name' : 'index' } } ),
+    element body {
+      element main {
+        attribute class { 'container' },
+        element article  {
+           element div {  'http://xq/gmack.nz/home/index' = fn:uri-collection('http://xq/gmack.nz/home') },
+           element p { doc-available('http://xq/gmack.nz/home/index') },
+           element p { unparsed-text-available('http://xq/gmack.nz/home/index') },
+           element div { $res instance of map(*)  }
+          }
+      }
+    }
   }
-
-
-:)
-
+)};
 
