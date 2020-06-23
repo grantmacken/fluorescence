@@ -1,3 +1,10 @@
+SHELL=/bin/bash
+.ONESHELL:
+.SHELLFLAGS := -eu -o pipefail -c
+.DELETE_ON_ERROR:
+MAKEFLAGS += --warn-undefined-variables
+MAKEFLAGS += --no-builtin-rules
+MAKEFLAGS += --silent
 
 include .env .version.env .gce.env
 include .inc/common.mk
@@ -41,7 +48,10 @@ ngx-up: $(T)/ngx-run/network.check $(T)/ngx-run/certs.check $(T)/ngx-run/config.
 .PHONY: ngx-down
 ngx-down: ngx-clean
 	@echo '##[ $@ ]##'
-	@$(if $(call containerRunning,$(NGX)),echo -n ' - stopping container: ' && docker stop $(PROXY_CONTAINER_NAME),)
+	@if docker ps --all --format '{{.Names}}' | grep -q $(NGX)
+	then
+	docker stop $(NGX) &>/dev/null || false
+	fi
 
 .PHONY: ngx-clean
 ngx-clean:

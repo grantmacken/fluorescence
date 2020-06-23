@@ -14,6 +14,19 @@ function res:problem( $sName, $sTitle, $iStatus, $sDetail  ) as map(*) {
   }
 };
 :)
+
+declare
+function res:jsonErr( $map as map(*) ) as element() {
+ if ( $map?value instance of map(*) ) 
+  then ( res:status( xs:integer( $map?value?status ), 
+                      $map?description, 
+                      'application/json'))
+  else ( res:status( 500, 
+                    'internal server error', 
+                    'application/json') )
+};
+
+
 declare
 function res:htmlErr( $map as map(*) ) as element() {
  if ( $map?value instance of map(*) ) 
@@ -55,14 +68,14 @@ function res:status( $status as xs:integer, $contentType as xs:string ) as eleme
 declare
 function res:status( $status as xs:integer, $message as xs:string, $contentType as xs:string ) as element() {
   <rest:response>
-    <http:response status="{$status => string()}" message="{$message}  ">
+    <http:response status="{$status => string()}" message="{$message}">
       <http:header name="Content-Type" value="{$contentType}"/>
     </http:response>
   </rest:response>
 };
 
 declare
-function res:created($slocation as xs:string ) as element(  ) {
+function res:created( $slocation as xs:string ) as element(  ) {
   <rest:response>
     <http:response status="201" message="Created">
       <http:header name="Location" value="{$slocation}"/>

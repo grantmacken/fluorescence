@@ -80,8 +80,12 @@ ServesContentType = if $(call HasHeaderKey,$(1),$(2)); then \
 ### For Curl Tests only when xq is up
 ####################################
 xqAddress != docker inspect --format='{{range .NetworkSettings.Networks}}{{.IPAddress}}{{end}}' $(XQERL_CONTAINER_NAME)  2>/dev/null || true
-xqResolve := --resolve $(DOMAIN):$(XQERL_PORT):$(xqAddress)
-URL := http://$(xqAddress):$(XQERL_PORT)
+
+# xqResolve := --resolve $(DOMAIN):$(XQERL_PORT):$(xqAddress)
+xqResolve := --resolve xq:$(XQERL_PORT):$(xqAddress)
+
+URL := http://xq:$(XQERL_PORT)
+# URL := http://$(xqAddress):$(XQERL_PORT)
 GET = curl --silent --show-error \
  --write-out $(WriteOut) \
   $(xqResolve) \
@@ -95,6 +99,7 @@ locationHeader = $(shell grep -oP 'location:.+/\K/($(DOMAIN)(.+)?$$)' $1 )
 locationGET = curl --silent --show-error \
  $(xqResolve) \
  $(URL)$1
+
 
 #############################
 
@@ -115,5 +120,10 @@ xmlPOST = curl --silent --show-error \
  --output $2 \
  --data-binary @- \
  $(URL)/$(DOMAIN)$1
+
+
+
+
+
 
 ############################

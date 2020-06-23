@@ -41,14 +41,21 @@ clean-xq-run:
 
 .PHONY: xq-down
 xq-down: clean-xq-run
-	@$(if $(call containerRunning,$(XQ)),echo -n ' - container aready stopped ',echo -n ' - stopping container: ' && docker stop $(XQ))
+	@echo '##[ $@ ]##'
+	@if docker ps --all --format '{{.Names}}' | grep -q $(XQ)
+	then
+	docker stop $(XQ) &>/dev/null || false
+	fi
 	@echo
 
 $(T)/xq-run/xqerl-up.check:
 	@mkdir -p $(dir $@)
 	@docker ps --all --filter name=$(XQ) --format '{{.Status}}' &> $@
-	@if ! grep -oP '^Up(.+)$$' $@ &>/dev/null ; then 
-	$(xqRun) && sleep 2 && docker ps --all --filter name=$(XQ) --format '{{.Status}}' &> $@
+	@if ! grep -oP '^Up(.+)$$' $@ &>/dev/null 
+	then
+	$(xqRun)
+	sleep 2
+	docker ps --all --filter name=$(XQ) --format '{{.Status}}' &> $@
 	fi
 	@$(if $(call containerRunning,$(XQ)),\
  $(call Tick, - xqerl: [ $$(tail -1 $@) ]),\

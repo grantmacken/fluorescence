@@ -21,20 +21,12 @@ include .inc/scaffold.mk
 # assets content build
 
 .PHONY: build
-build: code assets content
+build: code assets
 	@$(if $(GITHUB_ACTIONS),,xdotool search --onlyvisible --name "Mozilla Firefox"  key  Control_L+F5 || true)
 
-.PHONY: watch
-watch:
-	@while true; do \
-        $(MAKE) build; \
-        inotifywait -qre close_write . || true; \
-    done
-
 .PHONY: clean
-clean: clean-code clean-assets
+clean: clean-code clean-assets clean-scripts
 
-include .inc/code.mk .inc/static-assets.mk  .inc/content.mk  .inc/escripts.mk
-
+include .inc/code.mk .inc/escripts.mk .inc/static-assets.mk .inc/publish.mk
 
 

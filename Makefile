@@ -4,7 +4,7 @@ SHELL=/bin/bash
 .DELETE_ON_ERROR:
 MAKEFLAGS += --warn-undefined-variables
 MAKEFLAGS += --no-builtin-rules
-MAKEFLAGS += --silent
+# MAKEFLAGS += --silent
 ###################################
 include .env .version.env .gce.env
 include .inc/common.mk
@@ -28,7 +28,7 @@ test:
 	@popd &>/dev/null
 
 .PHONY: up
-up: clean-xq-run xq-up code ngx-up
+up: clean-xq-run xq-up clean-code code ngx-up
 
 .PHONY: down
 down: ngx-down xq-down
@@ -122,6 +122,22 @@ watch:
  inotifywait -qre close_write .  &>/dev/null; done
 	@popd &>/dev/null
 
+.PHONY: watch-code
+watch-code:
+	@pushd site/$(DOMAIN) &>/dev/null
+	@while true;
+	do $(MAKE) || true;
+	inotifywait -qre close_write ./code/  &>/dev/null;
+	done
+	@popd &>/dev/null
+
+.PHONY: watch-assets
+watch-assets:
+	@pushd site/$(DOMAIN) &>/dev/null
+	@while true; do $(MAKE) || true;  \
+ inotifywait -qre close_write ./static-assets/  &>/dev/null; done
+	@popd &>/dev/null
+
 .PHONY: escript
 escript:
 	@pushd site/$(DOMAIN) &>/dev/null
@@ -146,18 +162,36 @@ recompile:
 	@$(MAKE) $@
 	@popd &>/dev/null
 
-.PHONY: content
-content:
-	@pushd site/$(DOMAIN) &>/dev/null
-	@$(MAKE) $@
-	@popd &>/dev/null
-
 .PHONY: clean-code
 clean-code:
 	@pushd site/$(DOMAIN) &>/dev/null
 	@$(MAKE) $@
 	@popd &>/dev/null
 
+
+# CREATING AND EDITING CONTENT
+#
+.PHONY: watch-publish
+watch-publish:
+	@pushd site/$(DOMAIN) &>/dev/null
+	@while true;
+	do $(MAKE) publish || true;
+	inotifywait -qre close_write ./publish/  &>/dev/null;
+	done
+	@popd &>/dev/null
+
+.PHONY: publish
+publish:
+	@pushd site/$(DOMAIN)&>/dev/null
+	@$(MAKE) $@
+	@popd &>/dev/null
+
+
+.PHONY: clean-publish
+clean-publish:
+	@pushd site/$(DOMAIN) &>/dev/null
+	@$(MAKE) $@
+	@popd &>/dev/null
 
 
 .PHONY: assets
@@ -171,7 +205,6 @@ init-assets:
 	@pushd site/$(DOMAIN) &>/dev/null
 	@$(MAKE) $@
 	@popd &>/dev/null
-
 
 .PHONY: clean-assets
 clean-assets:
@@ -235,6 +268,7 @@ nginx-configuration-tar-deploy:
 
 .PHONY: pull-pkgs
 pull-pkgs:
+	#docker pull curlimages/curl:latest
 	@echo $(ghToken) | docker login docker.pkg.github.com --username $(REPO_OWNER) --password-stdin
 	@docker pull $(XQERL_DOCKER_IMAGE):$(XQ_VER)
 	@docker pull $(PROXY_DOCKER_IMAGE):$(NGX_VER)
@@ -247,7 +281,6 @@ pull-xq-ngx:
 	@echo $(ghToken) | docker login docker.pkg.github.com --username $(REPO_OWNER) --password-stdin
 	@docker pull $(XQERL_DOCKER_IMAGE):$(XQ_VER)
 	@docker pull $(PROXY_DOCKER_IMAGE):$(NGX_VER)
-
 
 .PHONY: list-compiled-libs
 list-compiled-libs:
@@ -283,11 +316,22 @@ certs-clean:
 .PHONY: gc-deploy
 gc-deploy:
 	@pushd gcloud &>/dev/null
-	@$(MAKE) gc-xq-stop
+	#@$(MAKE) gc-xq-stop
 	@$(MAKE) gc-deploy-tars
 	@$(MAKE) gc-xq-up
 	@$(MAKE) gc-code
 	@$(MAKE) gc-ngx-restart
+	@popd &>/dev/null
+
+.PHONY: deploy
+deploy:
+	@pushd gcloud &>/dev/null
+	#@$(MAKE) gc-xq-stop
+	#$(MAKE) gc-ngx-stop
+	#@$(MAKE) gc-deploy-tars
+	@$(MAKE) gc-xq-up
+	@$(MAKE) gc-code
+	@$(MAKE) gc-ngx-up
 	@popd &>/dev/null
 
 .PHONY: gc-xq-stop
@@ -332,8 +376,8 @@ gc-ngx-up:
 	@$(MAKE) $@
 	@popd &>/dev/null
 
-.PHONY: gc-init-dirs
-gc-init-dirs:
+.PHONY: gc-once
+gc-once:
 	@pushd gcloud &>/dev/null
 	@$(MAKE) $@
 	@popd &>/dev/null

@@ -1,9 +1,8 @@
 xquery version "3.1";
 module namespace render = "http://gmack.nz/#render";
 
-
 declare
-function render:home( $map as map(*) ) as element() {
+function render:home_index( $map as map(*) ) as element() {
   element html {
     attribute lang {'en'},
     $map => render:head(),
@@ -20,7 +19,7 @@ function render:home( $map as map(*) ) as element() {
             },
             $map?content/node()
           },
-         $map => render:aside( )
+         $map => render:aside()
         },
       $map => render:footer()
       }
@@ -258,26 +257,29 @@ uri-collection($arg as xs:string?)
 
 declare
 function render:aside( $map as map(*)) as element() {
-let $seqEntries := 'http://xq/gmack.nz/entry' => uri-collection()
+let $seqEntries := 'http://xq/gmack.nz' => uri-collection()
 let $entryCount := $seqEntries => count()
 return (
 element aside {
-element p { ``[  entries ]``  },
+element p { ``[ other articles ]``  },
 element ul { 
   attribute class { 'vertical-list'},
    $seqEntries => for-each(
       function ( $dbURI ) {
          let $item := $dbURI => db:get()
          return (
+          (:
           if ( $map?url eq $item?url ) then ()
           else (
+          :)
           element li { 
             element a {
               attribute href { $item?url  },
-              $item?name 
+              $item?name
               }
             }
-          ))
+          (: ) :)
+         )
         }
       )
   }
