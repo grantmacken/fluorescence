@@ -114,6 +114,12 @@ check-xq-routes-more:
 	@$(MAKE) $@
 	@popd &>/dev/null
 
+.PHONY: clean-routes
+clean-routes:
+	@pushd site/$(DOMAIN) &>/dev/null
+	@$(MAKE) $@
+	@popd &>/dev/null
+
 ## will error if error
 .PHONY: watch
 watch:
@@ -311,7 +317,6 @@ certs-clean:
 	@pushd gcloud &>/dev/null
 	@$(MAKE) $@
 	@popd &>/dev/null
-
 
 .PHONY: gc-deploy
 gc-deploy:

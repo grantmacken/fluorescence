@@ -41,8 +41,8 @@ jobs:
       run: make xq-info-more
     - name: Reachable routes - use curl to check restXQ resolvable routes.
       run: make check-xq-routes
-          # note if restXQ routes checkout OK then
-          # routes to statis assets will not resolve as they rely on the proxy
+          # note if restXQ routes checkout OK
+          # routes to static assets will not resolve as they rely on the proxy
     - name: Create xqerl-compiled-code artifact
       uses: actions/upload-artifact@v2
       with:

@@ -11,16 +11,13 @@ ifeq ($(origin INDEX),undefined)
  INDEX := $(EMPTY)
 endif
 
-P := published
 BindMountDeploy  := type=bind,target=/tmp,source=$(abspath ../../deploy)
 
 PublishList := $(wildcard publish/*.md)
 PublishBuildList   := $(patsubst %.md,$(B)/%.json,$(PublishList))
 
 CMARK_IMAGE := docker.pkg.github.com/$(REPO_OWNER)/alpine-cmark/cmark:$(CMARK_VER)
-CURL_IMAGE :=  curlimages/curl:$(CURL_VER)
-CONNECT_TO := --connect-to xq:80:xq.$(NETWORK):$(XQERL_PORT) 
-CURL := docker run --rm --interactive --network www $(CURL_IMAGE) $(CONNECT_TO)
+
 CMARK := docker run --rm  --interactive $(CMARK_IMAGE) --to xml | sed -e '1,2d'
 ctXML :=  --header 'Content-Type: application/xml'
 ACCEPT_JSON :=  --header 'Accept: application/json'
