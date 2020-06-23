@@ -7,4 +7,6 @@ proxy/certs
 gcloud/certs
 notes
 site/gmack.nz/*/hold*
+site/gmack.nz/publish/draft
+
 
