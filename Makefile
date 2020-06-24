@@ -199,6 +199,11 @@ clean-publish:
 	@$(MAKE) $@
 	@popd &>/dev/null
 
+.PHONY: new-article
+new-article:
+	@pushd site/$(DOMAIN) &>/dev/null
+	@$(MAKE) $@
+	@popd &>/dev/null
 
 .PHONY: assets
 assets:
@@ -286,6 +291,11 @@ pull-pkgs:
 pull-xq-ngx:
 	@echo $(ghToken) | docker login docker.pkg.github.com --username $(REPO_OWNER) --password-stdin
 	@docker pull $(XQERL_DOCKER_IMAGE):$(XQ_VER)
+	@docker pull $(PROXY_DOCKER_IMAGE):$(NGX_VER)
+
+.PHONY: pull-ngx
+pull-ngx:
+	@echo $(ghToken) | docker login docker.pkg.github.com --username $(REPO_OWNER) --password-stdin
 	@docker pull $(PROXY_DOCKER_IMAGE):$(NGX_VER)
 
 .PHONY: list-compiled-libs
@@ -386,5 +396,43 @@ gc-once:
 	@pushd gcloud &>/dev/null
 	@$(MAKE) $@
 	@popd &>/dev/null
+
+.PHONY: cb-clean
+cb-clean:
+	@pushd gcloud &>/dev/null
+	@$(MAKE) $@
+	@popd &>/dev/null
+
+.PHONY: cb-ini
+cb-ini:
+	@pushd gcloud &>/dev/null
+	@$(MAKE) $@
+	@popd &>/dev/null
+
+.PHONY:cb-testr
+cb-testr:
+	@pushd gcloud &>/dev/null
+	@$(MAKE) $@
+	@popd &>/dev/null
+
+.PHONY: cb-dry-run
+cb-dry-run:
+	@pushd gcloud &>/dev/null
+	@$(MAKE) $@
+	@popd &>/dev/null
+
+.PHONY: cb-info
+cb-info:
+	@pushd gcloud &>/dev/null
+	@$(MAKE) $@
+	@popd &>/dev/null
+
+.PHONY: cb-renew
+cb-renew:
+	@pushd gcloud &>/dev/null
+	@$(MAKE) $@
+	@popd &>/dev/null
+
+
 
 

@@ -4,6 +4,7 @@ on:
     - cron:  '15 4 * * 3'
 env:
   github_sha: ${{ github.sha }}
+  ghToken: ${{ secrets.GITHUB_TOKEN }}
 
 jobs:
   build:
@@ -13,10 +14,8 @@ jobs:
       uses: actions/checkout@v2
       with:
           fetch-depth: 1
-    - name: Set environment variables
-      run: |
-          source .env
-          echo '::set-env name=TERM::xterm'
+    - name: Pull in my docker images
+      run: echo '::set-env name=TERM::xterm' && make pull-ngx
     - name: Setup Google Cloud Platform
       uses: GoogleCloudPlatform/github-actions/setup-gcloud@master
       with:
@@ -24,30 +23,20 @@ jobs:
         service_account_key: ${{ secrets.GCE_SERVICE_ACCOUNT_KEY }}
         service_account_email: ${{ secrets.GCE_SERVICE_ACCOUNT_EMAIL }}
         export_default_credentials: true
-        run: |
-            gcloud project list
-    - name: Pull in my docker images
-      run: |
-    - name: Pull in docker image
-      run: |
-          source .env .version.env
-          PROXY_DOCKER_IMAGE=${PROXY_DOCKER_IMAGE}:${XQ_VER}
-          echo ' - pull in my docker images as helpers'
-          docker login docker.pkg.github.com --username ${REPO_OWNER} --password ${{ secrets.GITHUB_TOKEN }} &>/dev/null
-          docker pull ${PROXY_IMAGE}
 
-        #    #gcloud config set project ${GCE_PROJECT}
-        #    #gcloud config set compute/zone ${GCE_ZONE}
-        #    # gcloud compute instances list
-        #    gcloud compute config-ssh &>/dev/null
-        #    gcloud compute ssh ${GCE_NAME} --command \
-        #    "docker login docker.pkg.github.com --username ${REPO_OWNER} --password ${{ secrets.github_token }}"
-        #    gcloud compute ssh ${GCE_NAME} --command "docker pull ${PROXY_DOCKER_IMAGE}"
-        #    #gcloud info
-      #- name: Renew Certs Every Week On Wednesday  
-        #run: |
-        #    source .env
-        #    pushd gcloud
-        #    make -f certbot.mk renew
-        #    popd
+
+          
+    - name: Setup Google Cloud Platform
+      uses: GoogleCloudPlatform/github-actions/setup-gcloud@master
+      with:
+        project_id: ${{ secrets.GCE_PROJECT_ID }}
+        service_account_key: ${{ secrets.GCE_SERVICE_ACCOUNT_KEY }}
+        service_account_email: ${{ secrets.GCE_SERVICE_ACCOUNT_EMAIL }}
+        export_default_credentials: true
+      - name: Renew Certs Every Week On Wednesday
+        run: |
+            source .env
+            pushd gcloud
+            make cb-renew
+            popd
 

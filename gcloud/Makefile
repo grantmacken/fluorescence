@@ -135,6 +135,8 @@ gc-ngx-restart:
 gc-once:
 	@echo "## $@ ##"
 	@echo ' - once off, set up stuff'
+	@echo 'set up letsencrypt volume'
+	@$(Gcmd) 'docker volume list | grep -q "letsencrypt" || docker volume create letsencypt'
 	@echo 'set up dir structure on static-assets volume ... '
 	$(Gcmd) 'docker network create $(NETWORK)'
 	@$(Gcmd) 'docker run --rm --mount $(MountAssets) --entrypoint "sh" $(PROXY_IMAGE) \
@@ -146,3 +148,99 @@ gc-once:
  mkdir -p html/$(DOMAIN)/static-assets/styles"'
 	@$(Gcmd) 'docker run --rm --mount $(MountAssets) --entrypoint "sh" $(PROXY_IMAGE) \
  -c "ls -R html/$(DOMAIN)"'
+
+##############################
+cb-clean:
+	@echo '## $@ ##'
+	@rm -f $(B)/cli.ini
+
+cb-ini: $(B)/cli.ini
+
+define certbotConfig
+rsa-key-size = 2048
+email = $(GIT_EMAIL)
+domains = $(DOMAINS)
+text = true
+authenticator = webroot
+webroot-path = /home
+agree-tos = true
+eff-email = true
+logs-dir = /home
+endef
+
+$(B)/cli.ini: ../.gce.env
+	@$(Gcmd) 'echo "$(certbotConfig)" | \
+ docker run --rm --interactive \
+ --mount $(MountLetsencrypt) \
+ --entrypoint "sh" $(PROXY_IMAGE) \
+ -c "cat - > /etc/letsencrypt/cli.ini"'
+	@$(Gcmd) '\
+ docker run --rm --mount $(MountLetsencrypt) --entrypoint "sh" $(PROXY_IMAGE) \
+ -c "cat /etc/letsencrypt/cli.ini"' | tee $@
+
+.PHONY: cb-dry-run
+cb-dry-run:
+	@$(Gcmd) 'docker run -t --rm \
+ --mount type=volume,source=static-assets,target=/home \
+ --mount $(MountLetsencrypt) \
+ --network $(NETWORK) \
+ certbot/certbot certonly --dry-run --expand'
+
+.PHONY: certonly
+certonly:
+	@$(Gcmd) 'docker run -t --rm \
+ --mount type=volume,source=static-assets,target=/home \
+ --mount $(MountLetsencrypt) \
+ --network $(NETWORK) \
+ certbot/certbot certonly --expand'
+
+.PHONY: reload
+reload: 
+	@$(Gngx) './sbin/nginx -s reload'
+
+.PHONY: cb-renew
+cb-renew: $(B)/nginx.reload
+
+$(B)/nginx.reload: $(B)/certs.renew
+	@mkdir -p $(dir $@)
+	@grep -oP 'Cert not yet due for renewal' $< || \
+ $(Gngx) './sbin/nginx -s reload' | tee $@
+
+$(B)/certs.renew:
+	@mkdir -p $(dir $@)
+	@$(Gcmd) 'docker run -t --rm \
+ --mount type=volume,source=static-assets,target=/home \
+ --mount $(MountLetsencrypt) \
+ --network $(NETWORK) \
+ certbot/certbot renew' | tee $@
+
+.PHONY: cb-info
+cb-info:
+	@$(Gcmd) 'docker run -t --rm \
+ --mount type=volume,source=static-assets,target=/home \
+ --mount $(MountLetsencrypt) \
+ --network $(NETWORK) \
+ certbot/certbot certificates'
+
+
+.PHONY: dig
+dig:
+	@#dig gmack.nz +nocmd +nostats +noquestion
+	@echo '+++++++++++++++++++++++++++++++++++++++++++++++++++'
+	@dig @ns-cloud-d1.googledomains.com $(SUBDOMAIN) | grep status
+	@echo '+++++++++++++++++++++++++++++++++++++++++++++++++++'
+	@echo 'xxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxx'
+	@dig @208.67.222.222 $(SUBDOMAIN) | grep status
+	@echo 'xxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxx'
+
+.PHONY: openssl-sni
+openssl-sni:
+	@openssl s_client -servername $(TLS_COMMON_NAME) -tlsextdebug -msg -connect $(SUBDOMAIN):443
+	@2>&1 openssl s_client -connect $(TLS_COMMON_NAME):443 | openssl x509 -noout -text | grep -oP '^\s+\KDNS:.+'
+
+.PHONY: openssl-dates
+openssl-dates:
+	@echo | openssl s_client -connect $(TLS_COMMON_NAME):443 2>/dev/null | openssl x509 -noout -dates
+
+
+
