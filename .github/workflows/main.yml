@@ -49,7 +49,7 @@ jobs:
         name: xqerl-compiled-code
         path: deploy/xqerl-compiled-code.tar
     - name: Build 'static assets' from src files and put into 'static-assets' volume
-      run: make assets
+      run: make init-assets && make assets
     - name: Create static-assets artifact
       uses: actions/upload-artifact@v2
       with:
