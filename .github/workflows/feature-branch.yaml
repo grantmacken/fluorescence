@@ -69,6 +69,8 @@ jobs:
         service_account_key: ${{ secrets.GCE_SERVICE_ACCOUNT_KEY }}
         service_account_email: ${{ secrets.GCE_SERVICE_ACCOUNT_EMAIL }}
         export_default_credentials: true
+    - name: Run certbot on GCE and get certificate info
+      run: make cb-info
     - name: Fetch certs and put into 'letsencypt' volume on 'github-actions' host
       run: |
           make gc-init

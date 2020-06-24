@@ -96,27 +96,7 @@ reload:
 	@$(Gcc) './sbin/nginx -s reload'
 
 
-.PHONY: renew
-renew: nginx.reload
 
-nginx.reload: certs.renew
-	@grep -oP 'Cert not yet due for renewal' $< || \
- $(Gcc) './sbin/nginx -s reload' | tee $@
-
-certs.renew:
-	@$(Gcmd) 'docker run -t --rm \
- --mount $(mountNginxHtml) \
- --mount $(mountLetsencrypt) \
- --network $(NETWORK) \
- certbot/certbot renew' | tee $@
-
-.PHONY: certs
-certs:
-	@$(Gcmd) 'docker run -t --rm \
- --mount $(mountNginxHtml) \
- --mount $(mountLetsencrypt) \
- --network $(NETWORK) \
- certbot/certbot certificates'
 
 .PHONY: dig
 dig:
