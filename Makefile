@@ -280,8 +280,6 @@ nginx-configuration-tar-deploy:
 	@docker exec $(NGX) ./sbin/nginx -t
 	@docker exec $(NGX) ./sbin/nginx -s reload
 
-
-
 .PHONY: pull-pkgs
 pull-pkgs:
 	#docker pull curlimages/curl:latest
