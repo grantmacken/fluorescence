@@ -253,7 +253,6 @@ clean-styles:
 xqerl-database-tar-deploy:
 	@docker run --rm \
  --mount $(MountData) \
- --mount $(BindMountDeploy) \
  --entrypoint "tar" $(XQERL_IMAGE) xvf /tmp/xqerl-database.tar -C /
 
 .PHONY: xqerl-escripts-tar-deploy
@@ -276,6 +275,11 @@ nginx-configuration-tar-deploy:
  --mount $(MountNginxConf) \
  --mount $(BindMountDeploy) \
  --entrypoint "tar" $(PROXY_IMAGE) xvf /tmp/nginx-configuration.tar -C /
+	@rm -fv $(T)/ngx-run/*
+	@docker exec $(NGX) ./sbin/nginx -t
+	@docker exec $(NGX) ./sbin/nginx -s reload
+
+
 
 .PHONY: pull-pkgs
 pull-pkgs:

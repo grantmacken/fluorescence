@@ -2,10 +2,8 @@ name: development-features
 on:
   push:
     branches:
-      - 'workflow'
       - 'feature/*'
       - '!master'
-      - 'certbot/init'
 env:
   ghSha: ${{ github.sha }}
   ghToken: ${{ secrets.GITHUB_TOKEN }}
