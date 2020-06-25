@@ -31,7 +31,6 @@ clean-code:
 	@rm -fv $(D)/xqerl-compiled-code.tar
 	@rm -fv $(B)/code/*
 	@rm -fv $(T)/compile_result/*
-	@rm -fv $(T)/check_route/*
 
 $(D)/xqerl-compiled-code.tar: $(CodeBuildList)
 	@mkdir -p $(dir $@)
