@@ -1,15 +1,23 @@
 <!--
 {
-  "post-status" : "draft",
-  "slug" : "docker certbot and docker volumes"
+  "name": "docker certbot and docker volumes",
+  "post-status": "updated",
+  "published": "2020-06-24+12:00",
+  "type": "entry",
+  "uid": "http://xq/gmack.nz/article/docker-certbot-and-docker-volumes",
+  "url": "https://gmack.nz/article/docker-certbot-and-docker-volumes"
 }
 -->
 
-# docker certbot and docker volumes
+I am going to try to explain how I use use the 
+[certbot/certbot](https://hub.docker.com/r/certbot/certbot/) docker image with my 
+[grantmacken/alpine-nginx](https://hub.docker.com/r/grantmacken/alpine-nginx) image 
+to obtain lets encrypt certs.
 
-How I use use the certbot/certbot image with my alpine-nginx image to obtain
-lets encrypt certs.
-
+```bash
+docker pull certbot/certbot
+docker pull grantmacken/alpine-nginx
+```
 
 ## a docker volume named 'letsencrypt'
 
@@ -19,11 +27,11 @@ mount point.
 
 We can create amount volume and mount this volume at runtime. 
 
-```
+```make
 docker volume list | grep -q 'letsencrypt' || docker volume create letsencypt
 PROXY_IMAGE=docker.pkg.github.com/grantmacken/alpine-nginx/ngx:0.1.2
 docker run --rm --mount type=volume,target=/etc/letsencrypt,source=letsencrypt \
-$PROXY_IMAGE ls -al /etc/letsencrypt
+grantmacken/alpine-nginx ls -al /etc/letsencrypt
 ```
 
 When mounted this way anything placed in '/etc/letsencrypt/' will now persist in the volume.
@@ -33,7 +41,7 @@ When mounted this way anything placed in '/etc/letsencrypt/' will now persist in
 Our nginx configuration is set up to handle a
  [HTTP challenge](https://letsencrypt.org/docs/challenge-types/) on port 80
 
-```
+```make
 server {
   root html;
   index index.html;
@@ -54,24 +62,24 @@ server {
 
 With the declaration: 
 
-```
+```make
  root html;
 ```
 
-We tell nginx where to for **static** files to serve.
-In absolute terms this root is '/usr/local/nginx/html'
-Pre built into the 'nginx' image we use is a path to the [HTTP-01
+We tell nginx where to go for **static** files to serve.
+In absolute terms this root is '/usr/local/nginx/html'.
+ Pre built into the 'alpine-nginx' image, is a path to the [HTTP-01
 challenge](https://letsencrypt.org/docs/challenge-types/) directories
 `/usr/local/nginx/html/.well-known/acme-challenge`
 
-When running the 'ngx' container, this 'root' html directory is a target for
-named mount volume called 'static-assets'
+When running the 'alpine-nginx' image as a container, this 'root' html directory
+is a target for source mount volume called 'static-assets'
 
-```
+```make
 docker volume list | grep -q 'static-assets' || docker volume create static-assets
 docker run --rm \
  --mount type=volume,target=/usr/local/nginx/html,source=static-assets \
- $PROXY_IMAGE ls -R html/.well-known
+ grantmacken/alpine-nginx ls -R html/.well-known
 ```
 
 ## invoking certbot and the cli.ini'
@@ -87,7 +95,7 @@ on a prior running instance.
 
 This is a example certbot cli.ini that I use
 
-```
+```make
 rsa-key-size = 2048
 email =  me@gmail.com
 domains = example.com
@@ -102,11 +110,11 @@ logs-dir = /home
 Now to get the above into our 'letsencrypt' volume we can use 
 a container in interactive mode.
 
-```
+```make
 cat cli.ini | \
  docker run --rm --interactive \
  --mount type=volume,target=/etc/letsencrypt,source=letsencrypt \
- --entrypoint "sh" $PROXY_IMAGE \
+ --entrypoint "sh" grantmacken/alpine-nginx \
  -c "cat - > /etc/letsencrypt/cli.ini"
 ```
 
@@ -123,7 +131,7 @@ On your host get nginx running and serving files.
 At runtime expose ports 80 and 443 on the www. 
 Also mount the 'letsencrypt' and 'static-assets' volumes.
 
-```
+```make
 docker run --rm \
  --mount type=volume,target=/etc/letsencrypt,source=letsencrypt \
  --mount type=volume,target=/usr/local/nginx/html,source=static-assets \
@@ -132,16 +140,15 @@ docker run --rm \
  --publish 80:80 \
  --publish 443:443 \
  --detach \
- $(PROXY_IMAGE)
+ grantmacken/alpine-nginx
 ```
-
 
 ## using the volumes with certbot
 
 To get our certs we use the docker certbot/certbot image
 with two prior established docker volumes.
 
-```
+```make
 docker run -t --rm \
  --mount type=volume,target=/home,source=static-assets \
  --mount type=volume,target=/etc/letsencrypt,source=letsencrypt \
@@ -156,21 +163,22 @@ authenticator = webroot
 webroot-path = /home
 ```
 
-The 'ngx' container runtime target `/usr/local/nginx/html` is the contents of
+The 'nginx' container runtime target `/usr/local/nginx/html` is the contents of
 the 'static-assets' volume. 
 The certbot container runtime target `/home` is the contents of the 'static-assets'
 volume 
 
-```
-# the ngx container mount
+```make
+# the nginx container mount
  --mount type=volume,target=/usr/local/nginx/html,source=static-assets
 # the certbot container mount
 --mount type=volume,target=/home,source=static-assets
 ```
 
-'ngx' is running prior to the run of the certbot instance, so the contents of
-nginx dir `/usr/local/nginx/html`, will be the same as the contents of the `/home`
-directory when running the certbot instance because they use the same source volume.
+The nginx container is running prior to the run of the certbot instance, so the
+contents of nginx dir `/usr/local/nginx/html`, will be the same as the contents
+of the `/home` directory when running the certbot instance because they use the
+same source volume.
 
 
 

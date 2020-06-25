@@ -328,10 +328,16 @@ certs-clean:
 	@$(MAKE) $@
 	@popd &>/dev/null
 
+.PHONY: gc-publish
+gc-publish: 
+	@pushd gcloud &>/dev/null
+	@$(MAKE) $@
+	@popd &>/dev/null
+
 .PHONY: gc-deploy
 gc-deploy:
 	@pushd gcloud &>/dev/null
-	#@$(MAKE) gc-xq-stop
+	@$(MAKE) gc-xq-stop
 	@$(MAKE) gc-deploy-tars
 	@$(MAKE) gc-xq-up
 	@$(MAKE) gc-code

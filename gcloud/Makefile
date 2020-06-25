@@ -76,6 +76,12 @@ certs-clean:
 TarList := $(wildcard $(D)/*.tar)
 deployedTars := $(patsubst $(D)/%.tar,$(B)/%.txt,$(TarList))
 
+
+.PHONY: gc-publish
+gc-publish: 
+	$(gcDeploy-xqerl-database)
+
+
 .PHONY: gc-deploy-tars
 gc-deploy-tars: $(patsubst $(D)/%.tar,$(B)/%.txt,$(TarList))
 
@@ -87,6 +93,7 @@ gcDeploy = $(Gcmd) 'docker run --rm \
  --mount $(1) \
  --mount $(GceBindMountDeploy) \
  --entrypoint "tar" $(2) xvf /tmp/$(3).tar -C /'
+
 gcDeploy-xqerl-database = $(call gcDeploy,$(MountData),$(XQERL_IMAGE),xqerl-database)
 gcDeploy-xqerl-escripts = $(call gcDeploy,$(MountEscripts),$(XQERL_IMAGE),xqerl-escripts)
 gcDeploy-xqerl-compiled-code = $(call gcDeploy,$(MountCode),$(XQERL_IMAGE),xqerl-compiled-code)
