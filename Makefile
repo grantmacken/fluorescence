@@ -253,6 +253,7 @@ clean-styles:
 xqerl-database-tar-deploy:
 	@docker run --rm \
  --mount $(MountData) \
+ --mount $(BindMountDeploy) \
  --entrypoint "tar" $(XQERL_IMAGE) xvf /tmp/xqerl-database.tar -C /
 
 .PHONY: xqerl-escripts-tar-deploy
