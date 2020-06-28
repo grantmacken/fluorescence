@@ -1,4 +1,4 @@
-name: development-features
+name: feature-development
 on:
   push:
     branches:
