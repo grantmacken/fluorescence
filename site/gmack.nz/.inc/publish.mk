@@ -19,25 +19,30 @@ PublishBuildList   := $(patsubst %.md,$(B)/%.json,$(PublishList))
 CMARK_IMAGE := docker.pkg.github.com/$(REPO_OWNER)/alpine-cmark/cmark:$(CMARK_VER)
 
 CMARK := docker run --rm  --interactive $(CMARK_IMAGE) --to xml | sed -e '1,2d'
-ctXML :=  --header 'Content-Type: application/xml'
-ACCEPT_JSON :=  --header 'Accept: application/json'
+ctXML :=  --header "Content-Type: application/xml"
+ACCEPT_JSON :=  --header "Accept: application/json"
 SEND  := --data-binary @-
 WRITE := --write-out $(WriteOut)
 COMMENT_OPEN := <!--
 BASE_URL  := http://$(XQ)/$(DOMAIN)
 POSTS_URL :=  $(BASE_URL)/_posts
 
+# calls
+extractFM = sed -n '/^<!--/,/^-->/p;/^-->/q' $1 | sed -n '/^<!--/,/^-->/{//!p}'
+postStatus  = $(shell $(call extractFM,$1) | \
+              jq -e '."post-status"')
+postUid  = $(shell $(call extractFM,$1) | \
+              jq -e '."uid"')
+
 # content is built locally
 
 .PHONY: publish
 publish: $(D)/xqerl-database.tar
-	@xdotool search --onlyvisible --name "Mozilla Firefox"  key  Control_L+F5 || true
 
 .PHONY: clean-publish
 clean-publish:
 	@echo '## $@ ##'
-	@# do not use rm -frv $(wildcard publish/$(P)/*)
-	@rm -fv $(wildcard $(B)/publish/*)
+	@#rm -fv $(wildcard $(B)/publish/*)
 	@rm -f $(D)/xqerl-database.tar
 
 $(D)/xqerl-database.tar: $(PublishBuildList)
@@ -45,23 +50,72 @@ $(D)/xqerl-database.tar: $(PublishBuildList)
 	@docker run --rm \
  --mount $(MountData) \
  --entrypoint "tar" $(XQERL_IMAGE) -czf - $(XQERL_HOME)/data &>/dev/null > $@
-	@#echo;printf %60s | tr ' ' '-' && echo
-#$(P)/home/index.txt
 
 .PHONY: db-tar-deploy
 db-tar-deploy:
-	docker run --rm \
-		--mount $(MountData) \
- --mount $(BindMountDeploy) \
- --entrypoint "tar" $(XQERL_IMAGE) xvf /tmp/xqerl-database.tar -C /
+	cat $(D)/xqerl-database.tar |
+	docker run --rm --mount $(MountData) \
+ --entrypoint "tar" $(XQERL_IMAGE) - xvf /tmp/xqerl-database.tar -C /
 
-extractFM = sed -n '/^<!--/,/^-->/p;/^-->/q' $1 | sed -n '/^<!--/,/^-->/{//!p}'
-postStatus  = $(shell $(call extractFM,$1) | \
-              jq -e '."post-status"')
-postUid  = $(shell $(call extractFM,$1) | \
-              jq -e '."uid"')
+$(B)/publish/%.json: $(T)/publish/%.xml
+	echo '##[ $< ]##'
+	[ -d $(dir $@) ] || mkdir -p $(dir $@)
+	if [[ $(call postStatus,$(patsubst $(T)/%.xml,%.md,$<)) == 'updated' ]]; then touch $@; fi
+	if [[ $(call postStatus,$(patsubst $(T)/%.xml,%.md,$<)) == 'created' ]]; then touch $@; fi
+	if [[ $(call postStatus,$(patsubst $(T)/%.xml,%.md,$<)) == 'update' ]]; then
+	# local post
+	cat $< |
+	  $(CURL) -s $(ctXML) $(SEND) -X PUT $(call postUid,$(patsubst $(T)/%.xml,%.md,$<)) |
+	  jq -e '.' > $(basename $<).json
+	echo '-------------------'
+	jq -e '.' $(basename $<).json
+	# gcloud post
+	$(Gscp) $< $(GCE_NAME):~/publish/ &>/dev/null
+	#$(Gcmd) 'echo $(call postUid,$(patsubst $(T)/%.xml,%.md,$<))'
+	$(Gcmd) 'cat $(patsubst $(T)/%,%,$<) | \
+ $(CURL) -s $(ctXML) $(SEND) -X PUT $(call postUid,$(patsubst $(T)/%.xml,%.md,$<))'  &>/dev/null
+	@mv $(basename $<).json $@
+	sed -i 's/"update"/"updated"/' $(patsubst $(T)/%.xml,%.md,$<)
+	xdotool search --onlyvisible --name "Mozilla Firefox"  key  Control_L+F5 || true
+	fi
+	if [[ $(call postStatus,$(patsubst $(T)/%.xml,%.md,$<)) == 'create' ]]; then 
+	cat $< | $(CURL) -s $(ctXML) $(SEND) $(POSTS_URL) |
+	jq -e '.' > $(basename $<).json
+	# gcloud: send XML to host
+	$(Gscp) $< $(GCE_NAME):~/publish/ &>/dev/null
+	#$(Gcmd) 'echo $(call postUid,$(patsubst $(T)/%.xml,%.md,$<))'
+	$(Gcmd) 'cat $(patsubst $(T)/%,%,$<) | \
+ $(CURL) -s $(ctXML) $(SEND) $(POSTS_URL)'  &>/dev/null
+	# create tmp file
+	# copy post result into front matter
+	echo '' > $(basename $<).md
+	echo '<!--' >> $(basename $<).md
+	jq -e '.' $(basename $<).json >> $(basename $<).md
+	echo '-->' >> $(basename $<).md
+	# extract exiting markdown after frontmatter
+	sed -ne '/^-->/,$${//!p}' $(patsubst $(T)/%.xml,%.md,$<) >> $(basename $<).md
+	# overwrite src md document
+	mv -f $(basename $<).md $(patsubst $(T)/%.xml,%.md,$<)
+	# mv document recieved from post to target
+	@mv $(basename $<).json $@
+	fi
 
-$(B)/publish/%.json: publish/%.md
+
+xcdffffffff:
+	# create tmp file
+	# copy post result into front matter
+	echo '<!--' > $(basename $<).md
+	jq -e '.' $@ >> $(basename $<).md
+	echo '-->' >> $(basename $<).md
+	# extract exiting markdown after frontmatter
+	sed -ne '/^-->/,$${//!p}' $(patsubst $(T)/%.xml,%.md,$<) >> $(basename $<).md
+	# overwrite src md document
+	mv -f $(basename $<).md $(patsubst $(T)/%.xml,%.md,$<)
+	# mv document recieved from post to target
+	@mv $(basename $<).json $@
+	fi
+
+$(T)/publish/%.xml: publish/%.md
 	echo '##[ $< ]##'
 	[ -d $(dir $@) ] || mkdir -p $(dir $@)
 	# this is the quickfix errformat for vim
@@ -69,24 +123,10 @@ $(B)/publish/%.json: publish/%.md
 	if [[ $(call postStatus,$<) == 'updated' ]]; then touch $@; fi
 	if [[ $(call postStatus,$<) == 'created' ]]; then touch $@; fi
 	if [[ $(call postStatus,$<) == 'update' ]]; then 
-	cat $< |
-	  $(CMARK) |
-	  $(CURL) -s $(ctXML) $(SEND) -X PUT $(call postUid,$<) |
-	  jq -e '.' > $@
-	jq -e '.' $@
-	sed -i 's/"update"/"updated"/' $<
+	cat $< | $(CMARK) > $@
 	fi
 	if [[ $(call postStatus,$<) == 'create' ]]; then 
-	cat $< |
-	  $(CMARK) |
-	  $(CURL) -s $(ctXML) $(SEND) $(POSTS_URL) |
-	  jq -e '.'  >  $@
-	jq -e '.' $@
-	echo '<!--' > $@.md
-	jq -e '.' $@ >> $@.md
-	echo '-->' >> $@.md
-	sed -ne '/^-->/,$${//!p}' $< >> $@.md
-	mv -f $@.md $<
+	cat $< | $(CMARK) > $@
 	fi
 
 #########################################
@@ -110,19 +150,27 @@ new-index-page:
 	@$(file >> publish/$(INDEX)-index.md,)
 	@$(file >> publish/$(INDEX)-index.md,My $(INDEX) page sentence)
 
-slug != echo "publish/$(shell date --iso)-$(shell echo $(SLUG) | sed 's/ /-/g').md"
+slug = $$(echo "publish/$$(date --iso)-$1" | sed 's/ /-/g').md
 
 .PHONY: new-article
 new-article:
-	@$(if $(SLUG),, echo "usage: make new-article SLUG='my page name'" && false)
-	@$(file > $(slug),<!--)
-	@$(file >> $(slug),{)
-	@$(file >> $(slug),  "post-status" : "draft"$(COMMA))
-	@$(file >> $(slug),  "slug" : "$(SLUG)")
-	@$(file >> $(slug),})
-	@$(file >> $(slug),-->)
-	@$(file >> $(slug),)
-	@$(file >> $(slug),My interesting sentence)
+	@echo 'type name for page, then hit enter'
+	@read line
+	if [[ $$line == '' ]]
+	then 
+	echo 'aborting ... MUST add name for page'
+	exit 1
+	fi
+	echo "creating a new article[  $(call slug,$$line) ]"
+	echo '<!--' >  $(call slug,$$line)
+	echo "{ \"post-status\" : \"draft\"$(COMMA)\"slug\" : \"$$line\" }" |
+	jq -e '.' >>  $(call slug,$$line)
+	echo '-->'>>  $(call slug,$$line)
+	cat <<EOF | tee -a $(call slug,$$line)
+	In the frontmatter, you can
+	 * change the 'slug' value to create a page name.
+	 * change the 'post-status' value to 'create' when you are ready to publish
+	EOF
 
 Gssh := gcloud compute ssh $(GCE_NAME) --zone=$(GCE_ZONE) --project $(GCE_PROJECT_ID)
 Gcmd := $(Gssh) --command
