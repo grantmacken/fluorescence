@@ -1,0 +1,104 @@
+article ol,
+article ul {
+  padding-left: 2em;
+}
+
+ol {
+  list-style-type: upper-roman;
+}
+
+article ul {
+  list-style-type: square;
+}
+
+ol ol,
+ul ol {
+  list-style-type: lower-roman;
+}
+
+ol ol ol,
+ol ul ol,
+ul ol ol,
+ul ul ol {
+ margin-bottom: 0;
+ list-style-type: lower-alpha;
+}
+
+
+article ul li {
+  word-wrap: break-all;
+  margin-top: .25em;
+  padding-left: 1em;
+  font-size: 1em;
+}
+
+article ul li::marker {
+  color: var(--link-alt);
+ }
+
+
+
+nav h2 {
+  font-size: 1.2em;
+  line-height: 1.43;
+  color: #6a737d;
+}
+
+nav ul {
+ list-style: none;
+ padding-left: .25em;
+ font-family: var(--font-lists);
+ font-size: smaller;
+}
+
+nav ul li {
+  margin-top: 0;
+}
+
+.breadcrumb {
+   display: flex;
+  align-items: center;
+  padding-right: 1rem;
+}
+
+.breadcrumb a:hover {
+  background-color: var(--bg-alt);
+  color: var(--link-alt);
+  text-decoration: underline;
+}
+
+.breadcrumb li::before {
+    content: "→ ";
+    margin-left: .25em;
+}
+
+.breadcrumb li:first-child::before {
+    content: " ";
+}
+
+.vertical-list li a {
+  display: block;
+  color: var(--link);
+  background-color: #1a3307;
+  width: 100%;
+}
+
+.vertical-list li a:link,
+.vertical-list li a:visited {
+  /* display: block; */
+  padding-left: 20px;
+  padding-right: 20px;
+  margin-right: 5px;
+  text-decoration: none;
+  border-right: solid 2px #7dabca;
+  border-bottom: solid 1px #1e4f6e
+}
+
+.vertical-list li a:hover {
+  padding-left: 10px;
+  border-left: solid 10px #7dabca;
+}
+
+span[aria-current=page] {
+}
+
