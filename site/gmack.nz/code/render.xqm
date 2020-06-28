@@ -189,6 +189,11 @@ element head {
     attribute type { 'text/css' }
     },
   element link {
+    attribute href { '/styles/lists' },
+    attribute rel { 'stylesheet' },
+    attribute type { 'text/css' }
+    },
+  element link {
     attribute href { '/styles/prism' },
     attribute rel { 'stylesheet' },
     attribute type { 'text/css' }
@@ -261,27 +266,32 @@ let $seqEntries := 'http://xq/gmack.nz' => uri-collection()
 let $entryCount := $seqEntries => count()
 return (
 element aside {
-element p { ``[ other articles ]``  },
-element ul { 
-  attribute class { 'vertical-list'},
-   $seqEntries => for-each(
-      function ( $dbURI ) {
-         let $item := $dbURI => db:get()
-         return (
+  element nav {
+    attribute aria-labelledby { 'sections-heading' },
+    element h2 {
+      attribute id { 'sections-heading' },
+      ``[ other articles ]``  
+      },
+    element ul { 
+      attribute class { 'vertical-list' },
+      $seqEntries => for-each(
+         function ( $dbURI ) {
+           let $item := $dbURI => db:get()
+           return (
           (:
           if ( $map?url eq $item?url ) then ()
           else (
           :)
-          element li { 
+           element li { 
             element a {
               attribute href { $item?url  },
               $item?name
               }
             }
-          (: ) :)
          )
         }
       )
+    }
   }
 }
 )};
