@@ -32,6 +32,18 @@ endif
 
 T := .tmp
 
+# CALLS
+gcDeploy = $(Gcmd) 'docker run --rm \
+ --mount $(1) \
+ --mount type=bind,target=/tmp,source=/home/$(GCE_NAME)/deploy \
+ --entrypoint "tar" $(2) xvf /tmp/$(3).tar -C /'
+
+# shotcut var expansion
+Gssh := gcloud compute ssh $(GCE_NAME) --zone=$(GCE_ZONE) --project $(GCE_PROJECT_ID)
+Gcmd := $(Gssh) --command
+Gxq  := $(Gssh) --container $(XQ) --command
+Gngx := $(Gssh) --container $(NGX) --command
+Gscp := gcloud compute scp --zone=$(GCE_ZONE) --project $(GCE_PROJECT_ID) 
 # volume mounts
 MountCode   := type=volume,target=$(XQERL_HOME)/code,source=xqerl-compiled-code
 MountData   := type=volume,target=$(XQERL_HOME)/data,source=xqerl-database
@@ -39,8 +51,11 @@ MountEscripts   := type=volume,target=$(XQERL_HOME)/bin/scripts,source=xqerl-esc
 MountAssets := type=volume,target=$(PROXY_HOME)/html,source=static-assets
 MountNginxConf   := type=volume,target=$(PROXY_HOME)/conf,source=nginx-configuration
 MountLetsencrypt := type=volume,target=$(LETSENCRYPT),source=letsencrypt
-# bind mount might make volume for escripts
-# MountBin     := type=bind,target=$(XQERL_HOME)/bin/scripts,source=$(CURDIR)/bin
+gcDeploy-xqerl-database := $(call gcDeploy,$(MountData),$(XQERL_IMAGE),xqerl-database)
+gcDeploy-xqerl-escripts := $(call gcDeploy,$(MountEscripts),$(XQERL_IMAGE),xqerl-escripts)
+gcDeploy-xqerl-compiled-code := $(call gcDeploy,$(MountCode),$(XQERL_IMAGE),xqerl-compiled-code)
+gcDeploy-static-assets := $(call gcDeploy,$(MountAssets),$(PROXY_IMAGE),static-assets)
+gcDeploy-nginx-configuration := $(call gcDeploy,$(MountNginxConf),$(PROXY_IMAGE),nginx-configuration)
 
 define xqRun
  docker run --rm  \

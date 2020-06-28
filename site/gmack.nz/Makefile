@@ -19,7 +19,7 @@ D := ../../deploy
 BindMountBuild := type=bind,target=/tmp,source=$(CURDIR)/$(B)
 
 # STDOUT
-ipAddress != docker inspect --format='{{range .NetworkSettings.Networks}}{{.IPAddress}}{{end}}' $(XQERL_CONTAINER_NAME)  2>/dev/null || true
+ipAddress != docker inspect --format='{{range .NetworkSettings.Networks}}{{.IPAddress}}{{end}}' $(XQ)  2>/dev/null || true
 # EXPANSIONS
 CURL_IMAGE := curlimages/curl:$(CURL_VER)
 CONNECT_TO := --connect-to $(XQ):80:xq.$(NETWORK):$(XQERL_PORT) 

@@ -305,7 +305,17 @@ pull-ngx:
 list-compiled-libs:
 	@$(ESCRIPT) bin/scripts/$(@).escript
 
-########################################################
+#################
+# GCLOUD section
+# prefixed gc
+# cloud deployment
+#################
+
+.PHONY: clean-gc
+clean-gc:
+	@pushd gcloud &>/dev/null
+	@$(MAKE) $@
+	@popd &>/dev/null
 
 .PHONY: gc-init
 gc-init:
@@ -331,31 +341,14 @@ certs-clean:
 	@$(MAKE) $@
 	@popd &>/dev/null
 
-.PHONY: gc-publish
-gc-publish: 
+
+#  GCLOUD targets
+#  prefix gc
+
+.PHONY: gc-deploy-tars
+gc-deploy-tars:
 	@pushd gcloud &>/dev/null
 	@$(MAKE) $@
-	@popd &>/dev/null
-
-.PHONY: gc-deploy
-gc-deploy:
-	@pushd gcloud &>/dev/null
-	@$(MAKE) gc-xq-stop
-	@$(MAKE) gc-deploy-tars
-	@$(MAKE) gc-xq-up
-	@$(MAKE) gc-code
-	@$(MAKE) gc-ngx-restart
-	@popd &>/dev/null
-
-.PHONY: deploy
-deploy:
-	@pushd gcloud &>/dev/null
-	#@$(MAKE) gc-xq-stop
-	#$(MAKE) gc-ngx-stop
-	#@$(MAKE) gc-deploy-tars
-	@$(MAKE) gc-xq-up
-	@$(MAKE) gc-code
-	@$(MAKE) gc-ngx-up
 	@popd &>/dev/null
 
 .PHONY: gc-xq-stop
@@ -364,26 +357,14 @@ gc-xq-stop:
 	@$(MAKE) $@
 	@popd &>/dev/null
 
-.PHONY: gc-deploy-tars
-gc-deploy-tars:
-	@pushd gcloud &>/dev/null
-	@$(MAKE) $@
-	@popd &>/dev/null
-
-.PHONY: clean-gc-deploy-tars
-clean-gc-deploy-tars:
+.PHONY: gc-clean
+gc-clean:
 	@pushd gcloud &>/dev/null
 	@$(MAKE) $@
 	@popd &>/dev/null
 
 .PHONY: gc-xq-up
 gc-xq-up:
-	@pushd gcloud &>/dev/null
-	@$(MAKE) $@
-	@popd &>/dev/null
-
-.PHONY: gc-code
-gc-code:
 	@pushd gcloud &>/dev/null
 	@$(MAKE) $@
 	@popd &>/dev/null
@@ -405,6 +386,9 @@ gc-once:
 	@pushd gcloud &>/dev/null
 	@$(MAKE) $@
 	@popd &>/dev/null
+
+## CERTBOT targets
+# prefix cb
 
 .PHONY: cb-clean
 cb-clean:
@@ -441,7 +425,3 @@ cb-renew:
 	@pushd gcloud &>/dev/null
 	@$(MAKE) $@
 	@popd &>/dev/null
-
-
-
-

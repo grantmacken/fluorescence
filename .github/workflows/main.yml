@@ -2,7 +2,7 @@ name: continuous-integration
 on:
   push:
     branches:
-      - master
+      - main
 #https://help.github.com/en/actions/automating-your-workflow-with-github-actions/workflow-syntax-for-github-actions#onevent_nametypes
 # environment variables available to all jobs and steps in this workflow
 env:
@@ -39,8 +39,8 @@ jobs:
       run: make code
     - name: Check xq running xqerl on the 'github actions' host
       run: make xq-info-more
-    # - name: Reachable routes - use curl to check restXQ resolvable routes.
-    #   run: make check-xq-routes
+    - name: Reachable routes - use curl to check restXQ resolvable routes.
+      run: make check-xq-routes
           # note if restXQ routes checkout OK then
           # routes to statis assets will not resolve as they rely on the proxy
     - name: Create xqerl-compiled-code artifact
@@ -81,7 +81,7 @@ jobs:
           # - fetching static assets
           # - checking hit-miss cache
     - name: Google Compute Engine Deploy
-      run: make gc-deploy
+      run: make gc-deploy-tars
 # I am not sure whether untar into db volume will corrupt xqerl db
 # if db io operations are occurring so I am stopping xq.
 # I might even remove running 'xqerl-database' volume and replace with local volume

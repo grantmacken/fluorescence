@@ -3,7 +3,7 @@ on:
   push:
     branches:
       - 'feature/*'
-      - '!master'
+      - '!main'
 env:
   ghSha: ${{ github.sha }}
   ghToken: ${{ secrets.GITHUB_TOKEN }}
