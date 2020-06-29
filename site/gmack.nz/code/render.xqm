@@ -8,7 +8,7 @@ function render:home_index( $map as map(*) ) as element() {
     $map => render:head(),
     element body {
       $map => render:header(),
-      $map => render:nav(),
+      $map => render:nav-breadcrumb(),
       element main {
         attribute class { 'container' },
         element article  {
@@ -33,7 +33,7 @@ function render:article_index( $map as map(*) ) as element() {
     $map =>render:head(),
     element body {
       $map => render:header(),
-      $map => render:nav(),
+      $map => render:nav-breadcrumb(),
       element main {
         attribute class { 'container' },
         element article  {
@@ -58,7 +58,7 @@ function render:article( $map as map(*) ) as element() {
     $map =>render:head(),
     element body {
       $map => render:header(),
-      $map => render:nav(),
+      $map => render:nav-breadcrumb(),
       element main {
         attribute class { 'container' },
         element article  {
@@ -145,7 +145,7 @@ function render:html( $map as map(*) ) as element() {
     render:head( $map ),
     element body {
       render:header( $map ),
-      render:nav( $map ),
+      render:nav-breadcrumb( $map ),
       element main { 
         attribute class { 'container' },
         element article  {
@@ -174,6 +174,12 @@ element head {
     attribute content { "text/html; charset=UTF-8"}
     },
   element title { $map?name },
+  if ( $map => map:contains('summary') ) then 
+    element meta {
+      attribute name { 'description' },
+      attribute content { $map?summary }
+    }
+  else (),
   element meta {
     attribute name { 'viewport' },
     attribute content { 'width=device-width, initial-scale=1' }
@@ -223,7 +229,7 @@ function render:header( $map as map(*) ) as element() {
 };
 
 declare
-function render:nav( $map as map(*)) as element() {
+function render:nav-breadcrumb( $map as map(*)) as element() {
 element nav {
   attribute aria-label { 'Breadcrumb' },
   element ul {
@@ -255,21 +261,16 @@ element div {
   }
 };
 
-(: string-join(map:keys($map), ' ' ) string-join(map:keys($map), ' ' )
-uri-collection($arg as xs:string?)
-:)
-
-
 declare
 function render:aside( $map as map(*)) as element() {
-let $seqEntries := 'http://xq/gmack.nz' => uri-collection()
+let $seqEntries := 'http://xq/gmack.nz/article' => uri-collection()
 let $entryCount := $seqEntries => count()
 return (
 element aside {
   element nav {
-    attribute aria-labelledby { 'sections-heading' },
+    attribute aria-labelledby { 'articles' },
     element h2 {
-      attribute id { 'sections-heading' },
+      attribute id { 'articles' },
       ``[ other articles ]``  
       },
     element ul { 
@@ -278,17 +279,16 @@ element aside {
          function ( $dbURI ) {
            let $item := $dbURI => db:get()
            return (
-          (:
-          if ( $map?url eq $item?url ) then ()
-          else (
-          :)
-           element li { 
-            element a {
-              attribute href { $item?url  },
-              $item?name
-              }
-            }
-         )
+            if ( $map?url eq $item?url ) then ()
+            else (
+              element li { 
+                element a {
+                  attribute href { $item?url  },
+                  $item?name
+                  }
+                }
+            )
+          )
         }
       )
     }
