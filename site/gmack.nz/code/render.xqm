@@ -279,7 +279,9 @@ element aside {
          function ( $dbURI ) {
            let $item := $dbURI => db:get()
            return (
-            if ( $map?url eq $item?url ) then ()
+            if ( ($map?url eq $item?url ) or
+                 ($item?uid eq 'http://xq/gmack.nz/article/index' )
+               ) then ()
             else (
               element li { 
                 element a {
