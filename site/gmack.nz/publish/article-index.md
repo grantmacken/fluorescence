@@ -1,6 +1,6 @@
 <!--
 {
-  "post-status": "updated",
+  "status": "updated",
   "published": "2020-06-21+12:00",
   "type": "entry",
   "uid": "http://xq/gmack.nz/article/index",

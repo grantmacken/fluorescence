@@ -1,6 +1,6 @@
 <!--
 {
-  "post-status": "updated",
+  "status": "updated",
   "name": "gmack.nz",
   "summary": "home page for site developed by Grant Mackenzie",
   "published": "2020-06-20+12:00",
