@@ -22,18 +22,23 @@ CMARK := docker run --rm  --interactive $(CMARK_IMAGE) --to xml | sed -e '1,2d'
 ctXML :=  --header "Content-Type: application/xml"
 ACCEPT_JSON :=  --header "Accept: application/json"
 SEND  := --data-binary @-
+OUT_HEADER := --output /dev/null --dump-header -
 WRITE := --write-out $(WriteOut)
 COMMENT_OPEN := <!--
 BASE_URL  := http://$(XQ)/$(DOMAIN)
 POSTS_URL :=  $(BASE_URL)/_posts
 
 # calls
-extractFM = sed -n '/^<!--/,/^-->/p;/^-->/q' $1 | sed -n '/^<!--/,/^-->/{//!p}'
-postStatus  = $(shell $(call extractFM,$1) | \
-              jq -e '."post-status"')
-postUid  = $(shell $(call extractFM,$1) | \
+#
+extractFM = sed -n '/^<!--/,/^-->/p;/^-->/q' $1  | sed -n '/^<!--/,/^-->/{//!p}'
+pubStatus  = $(shell $(call extractFM,$1) | \
+              jq -e '."status"')
+pubUid  = $(shell $(call extractFM,$1) | \
               jq -e '."uid"')
 
+# header file
+extractHeader = $(shell grep -oP  '^$2: \K(.+)$$' $1)
+extractStatus = $(shell grep -oP  '^HTTP/1.1 \K(.+)$$' $1)
 # content is built locally
 
 .PHONY: publish
@@ -57,77 +62,94 @@ db-tar-deploy:
 	docker run --rm --mount $(MountData) \
  --entrypoint "tar" $(XQERL_IMAGE) - xvf /tmp/xqerl-database.tar -C /
 
-$(B)/publish/%.json: $(T)/publish/%.xml
+$(B)/publish/%.json: $(T)/publish/%.header
+	[ -d $(dir $@) ] || mkdir -p $(dir $@)
+	case $(call pubStatus,publish/$(*).md) in
+	'update')
+	  echo '## [ gcloud update ]##'
+	  $(Gscp) $(basename $<).xml $(GCE_NAME):~/publish/ &>/dev/null
+	  $(Gcmd) 'cat ~/publish/$(*).xml |
+		$(CURL) -s $(ctXML) $(SEND) -X PUT $(call pubUid,publish/$(*).md)' |
+	  jq -e '.' |
+	  tee $@
+	  echo "$$(awk '/"status": [^"]*"[^"]*"/ && !done \
+    { gsub ( /update/,"updated"); done=1;}; 1;' \
+    publish/$(*).md )" > publish/$(*).md
+	  ;;
+	'create')
+	  echo '## [ gcloud create ]##'
+	  $(Gscp) $(basename $<).xml $(GCE_NAME):~/publish/ &>/dev/null
+	  $(Gcmd) 'cat publish/$(*).xml | $(CURL) -s $(ctXML) $(SEND) $(POSTS_URL)' |
+	  jq -e '.' |
+	  tee $@
+	  echo "$$(awk '/"status": [^"]*"[^"]*"/ && !done { \
+    gsub ( /create/,"created"); done=1;}; 1;' publish/$(*).md | \
+    awk '/"slug": [^"]*"[^"]*"/ && !done { \
+    gsub (/"slug": [^"]*"[^"]*"/,\
+    "\"uid\": \"$(call extractHeader,$<,location)\"");\
+    done=1;};1;')" > publish/$(*).md
+	  ;;
+	 *)
+	  touch $@
+	  ;;
+	esac
+
+$(T)/publish/%.header: $(T)/publish/%.xml
 	echo '##[ $< ]##'
 	[ -d $(dir $@) ] || mkdir -p $(dir $@)
-	if [[ $(call postStatus,$(patsubst $(T)/%.xml,%.md,$<)) == 'updated' ]]; then touch $@; fi
-	if [[ $(call postStatus,$(patsubst $(T)/%.xml,%.md,$<)) == 'created' ]]; then touch $@; fi
-	if [[ $(call postStatus,$(patsubst $(T)/%.xml,%.md,$<)) == 'update' ]]; then
-	# local post
-	cat $< |
-	  $(CURL) -s $(ctXML) $(SEND) -X PUT $(call postUid,$(patsubst $(T)/%.xml,%.md,$<)) |
-	  jq -e '.' > $(basename $<).json
-	echo '-------------------'
-	jq -e '.' $(basename $<).json
-	# gcloud post
-	$(Gscp) $< $(GCE_NAME):~/publish/ &>/dev/null
-	#$(Gcmd) 'echo $(call postUid,$(patsubst $(T)/%.xml,%.md,$<))'
-	$(Gcmd) 'cat $(patsubst $(T)/%,%,$<) | \
- $(CURL) -s $(ctXML) $(SEND) -X PUT $(call postUid,$(patsubst $(T)/%.xml,%.md,$<))'  &>/dev/null
-	@mv $(basename $<).json $@
-	sed -i 's/"update"/"updated"/' $(patsubst $(T)/%.xml,%.md,$<)
-	xdotool search --onlyvisible --name "Mozilla Firefox"  key  Control_L+F5 || true
-	fi
-	if [[ $(call postStatus,$(patsubst $(T)/%.xml,%.md,$<)) == 'create' ]]; then 
-	cat $< | $(CURL) -s $(ctXML) $(SEND) $(POSTS_URL) |
-	jq -e '.' > $(basename $<).json
-	# gcloud: send XML to host
-	$(Gscp) $< $(GCE_NAME):~/publish/ &>/dev/null
-	#$(Gcmd) 'echo $(call postUid,$(patsubst $(T)/%.xml,%.md,$<))'
-	$(Gcmd) 'cat $(patsubst $(T)/%,%,$<) | \
- $(CURL) -s $(ctXML) $(SEND) $(POSTS_URL)'  &>/dev/null
-	# create tmp file
-	# copy post result into front matter
-	echo '' > $(basename $<).md
-	echo '<!--' >> $(basename $<).md
-	jq -e '.' $(basename $<).json >> $(basename $<).md
-	echo '-->' >> $(basename $<).md
-	# extract exiting markdown after frontmatter
-	sed -ne '/^-->/,$${//!p}' $(patsubst $(T)/%.xml,%.md,$<) >> $(basename $<).md
-	# overwrite src md document
-	mv -f $(basename $<).md $(patsubst $(T)/%.xml,%.md,$<)
-	# mv document recieved from post to target
-	@mv $(basename $<).json $@
-	fi
-
-
-xcdffffffff:
-	# create tmp file
-	# copy post result into front matter
-	echo '<!--' > $(basename $<).md
-	jq -e '.' $@ >> $(basename $<).md
-	echo '-->' >> $(basename $<).md
-	# extract exiting markdown after frontmatter
-	sed -ne '/^-->/,$${//!p}' $(patsubst $(T)/%.xml,%.md,$<) >> $(basename $<).md
-	# overwrite src md document
-	mv -f $(basename $<).md $(patsubst $(T)/%.xml,%.md,$<)
-	# mv document recieved from post to target
-	@mv $(basename $<).json $@
-	fi
+	case $(call pubStatus,publish/$(*).md) in
+	 'update')
+	  echo '## [ local update ]##'
+	  cat $< | $(CURL) -s $(ctXML) $(SEND) $(OUT_HEADER) -X PUT $(call pubUid,publish/$(*).md) > $@
+	  xdotool search --onlyvisible --name "Mozilla Firefox"  key  Control_L+F5 || true
+	  ;;
+	 'create')
+	  echo '## [ local create ]##'
+	  cat $< | $(CURL) -s $(ctXML) $(SEND) $(OUT_HEADER) $(POSTS_URL) | tee $@
+	  xdotool search --onlyvisible --name "Mozilla Firefox"  key  Control_L+F5 || true
+	  ;;
+	 *)
+	  touch $@
+	  ;;
+	esac
 
 $(T)/publish/%.xml: publish/%.md
 	echo '##[ $< ]##'
 	[ -d $(dir $@) ] || mkdir -p $(dir $@)
+	if [ -z "$$(sed -n '/^<!--/,/^-->/p;/^-->/q' $<)" ]
+	then 
+	  echo 'ERROR: rontmatter block: check formating '
+	  echo ' - frontmatter should open and close with HTML comment'
+	  echo ' - frontmatter should contain well formed JSON object'
+	  false
+	fi
+	sed -n '/^<!--/,/^-->/p;/^-->/q' $<  | sed -n '/^<!--/,/^-->/{//!p}' |
+	jq -e '.' > $(basename $@).json
 	# this is the quickfix errformat for vim
-	echo "$<:1: post status - $(call postStatus,$<)"
-	if [[ $(call postStatus,$<) == 'updated' ]]; then touch $@; fi
-	if [[ $(call postStatus,$<) == 'created' ]]; then touch $@; fi
-	if [[ $(call postStatus,$<) == 'update' ]]; then 
-	cat $< | $(CMARK) > $@
-	fi
-	if [[ $(call postStatus,$<) == 'create' ]]; then 
-	cat $< | $(CMARK) > $@
-	fi
+	echo "$<:1: post status - $(call pubStatus,$<)"
+	case $(call pubStatus,$<) in
+	 'update')
+	  cat $< | $(CMARK) > $@
+	  ;;
+	 'create')
+	  cat $< | $(CMARK) > $@
+	  ;;
+	 'fetch')
+	  echo '## [ local fetch ]##'
+		# recreate frontmatter
+		echo '<!--' > $(basename $@).md
+	  cat $< | $(CURL) -s $(ACCEPT_JSON) $(call pubUid,$<) |
+		jq -e '.' |
+	  jq '.status = "fetched"' >> $(basename $@).md
+	  echo '-->' >> $(basename $@).md
+	  # extract markdown body
+	  sed -ne '/^-->/,$${//!p}' $< >> $(basename $@).md
+		mv $(basename $@).md $<
+	  ;;
+	 *)
+	  touch $@
+	  ;;
+	esac
 
 #########################################
 
