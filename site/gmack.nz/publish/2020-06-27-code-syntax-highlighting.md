@@ -2,7 +2,7 @@
 <!--
 {
   "name": "code syntax highlighting",
-  "post-status": "created",
+  "status": "created",
   "published": "2020-06-26+12:00",
   "type": "entry",
   "uid": "http://xq/gmack.nz/article/code-syntax-highlighting",

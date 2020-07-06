@@ -1,7 +1,7 @@
 <!--
 {
   "name": "docker certbot and docker volumes",
-  "post-status": "updated",
+  "status": "updated",
   "published": "2020-06-24+12:00",
   "type": "entry",
   "uid": "http://xq/gmack.nz/article/docker-certbot-and-docker-volumes",

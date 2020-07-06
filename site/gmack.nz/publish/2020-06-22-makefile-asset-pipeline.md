@@ -1,7 +1,7 @@
 <!--
 {
   "name": "makefile asset pipeline",
-  "post-status": "created",
+  "status": "created",
   "published": "2020-06-21+12:00",
   "type": "entry",
   "uid": "http://xq/gmack.nz/article/makefile-asset-pipeline",
