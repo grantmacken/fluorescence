@@ -223,6 +223,12 @@ clean-assets:
 	@$(MAKE) $@
 	@popd &>/dev/null
 
+.PHONY: fonts
+fonts:
+	@pushd site/$(DOMAIN) &>/dev/null
+	@$(MAKE) $@
+	@popd &>/dev/null
+
 .PHONY: scripts
 scripts:
 	@pushd site/$(DOMAIN) &>/dev/null
