@@ -350,10 +350,10 @@ certs-clean:
 #  GCLOUD targets
 #  prefix gc
 
-.PHONY: gc-deploy-tars
-gc-deploy-tars:
+.PHONY: gc-deploy
+gc-deploy:
 	@pushd gcloud &>/dev/null
-	@$(MAKE) $@
+	@$(MAKE)
 	@popd &>/dev/null
 
 .PHONY: gc-xq-stop
