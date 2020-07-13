@@ -24,7 +24,6 @@ ul ul ol {
  list-style-type: lower-alpha;
 }
 
-
 article ul li {
   word-wrap: break-all;
   margin-top: .25em;
@@ -33,10 +32,8 @@ article ul li {
 }
 
 article ul li::marker {
-  color: var(--link-alt);
+  color: blue;
  }
-
-
 
 nav h2 {
   font-size: 1.2em;
@@ -47,7 +44,6 @@ nav h2 {
 nav ul {
  list-style: none;
  padding-left: .25em;
- font-family: var(--font-lists);
  font-size: smaller;
 }
 
@@ -55,50 +51,74 @@ nav ul li {
   margin-top: 0;
 }
 
-.breadcrumb {
-   display: flex;
-  align-items: center;
+/* NAVIGATION LIST BLOCK COMPONENTS */
+
+
+.nl {
+  font-family: var(--list-font);
+  background-color: var(--nav-background);
+}
+
+/* A ROW FLEX ITEM in menu bar */
+.nl_search {
+  visibility: hidden;
+}
+
+/* A ROW FLEX ITEM in menu bar */
+.nl_menu {
+  visibility: hidden;
+}
+
+/* A ROW FLEX ITEM in menu bar */
+.nl_breadcrumb {
+  /* move off right screen edge */
   padding-right: 1rem;
+  /* flex child props */ 
+  display: flex;
+  flex-direction: row;
+  flex-wrap: wrap;
+  justify-content: flex-end;
+  align-content: center;
+  align-items: baseline;
 }
 
-.breadcrumb a:hover {
-  background-color: var(--bg-alt);
-  color: var(--link-alt);
-  text-decoration: underline;
-}
-
-.breadcrumb li::before {
+.nl_breadcrumb li::before {
     content: "→ ";
+    color: var(--blue2);
     margin-left: .25em;
 }
 
-.breadcrumb li:first-child::before {
+.nl_breadcrumb li:first-child::before {
     content: " ";
 }
 
-.vertical-list li a {
-  display: block;
-  color: var(--link);
-  background-color: #1a3307;
-  width: 100%;
-}
-
-.vertical-list li a:link,
-.vertical-list li a:visited {
-  /* display: block; */
+.nl_complementary {
   padding-left: 20px;
   padding-right: 20px;
-  margin-right: 5px;
+  flex-direction: column;
+  align-content: stretch;
+}
+
+/* flex items */
+.nl_complementary li {
+    order: 0;
+    flex: 0 1 auto;
+    align-self: stretch;
+}
+
+.nl_complementary a {
+  display: block;
+  width: 100%;
+  padding-left: .5em;
+  border-left: solid 10px transparent;
+  border-right: solid 2px var(--blue1);
+  border-bottom: solid 1px var(--blue1);
   text-decoration: none;
-  border-right: solid 2px #7dabca;
-  border-bottom: solid 1px #1e4f6e
 }
 
-.vertical-list li a:hover {
-  padding-left: 10px;
-  border-left: solid 10px #7dabca;
-}
-
-span[aria-current=page] {
+.nl_complementary a:hover {
+  border-left: solid 10px var(--link-highlight);
+  border-right: solid 2px var(--orange);
+  border-bottom: solid 1px var(--orange);
 }
 
