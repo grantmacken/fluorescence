@@ -121,12 +121,12 @@ clean-routes:
 	@popd &>/dev/null
 
 ## will error if error
-.PHONY: watch
-watch:
-	@pushd site/$(DOMAIN) &>/dev/null
-	@while true; do $(MAKE) || true;  \
- inotifywait -qre close_write .  &>/dev/null; done
-	@popd &>/dev/null
+# .PHONY: watch
+# watch:
+# @pushd site/$(DOMAIN) &>/dev/null
+# while true; do $(MAKE) || true;  \
+# inotifywait -qre close_write .  &>/dev/null; done
+# popd &>/dev/null
 
 .PHONY: watch-code
 watch-code:
@@ -219,6 +219,12 @@ init-assets:
 
 .PHONY: clean-assets
 clean-assets:
+	@pushd site/$(DOMAIN) &>/dev/null
+	@$(MAKE) $@
+	@popd &>/dev/null
+
+.PHONY: fonts
+fonts:
 	@pushd site/$(DOMAIN) &>/dev/null
 	@$(MAKE) $@
 	@popd &>/dev/null
@@ -344,10 +350,10 @@ certs-clean:
 #  GCLOUD targets
 #  prefix gc
 
-.PHONY: gc-deploy-tars
-gc-deploy-tars:
+.PHONY: gc-deploy
+gc-deploy:
 	@pushd gcloud &>/dev/null
-	@$(MAKE) $@
+	@$(MAKE)
 	@popd &>/dev/null
 
 .PHONY: gc-xq-stop

@@ -4,6 +4,7 @@
 BuildIconsList := $(patsubst  %.svg,$(B)/$(DOMAIN)/%.svgz,$(wildcard static-assets/icons/*.svg))
 BuildStylesList := $(patsubst %.css,$(B)/$(DOMAIN)/%.css.gz,$(wildcard static-assets/styles/*.css))
 BuildScriptsList := $(patsubst %.js,$(B)/$(DOMAIN)/%.js.gz,$(wildcard static-assets/scripts/*.js))
+BuildFontsList := $(patsubst %,$(B)/$(DOMAIN)/%,$(wildcard static-assets/fonts/*))
 
 .PHONY: assets
 assets: $(D)/static-assets.tar
@@ -27,7 +28,7 @@ clean-assets: clean-icons clean-styles clean-scripts
 	@echo '## $@ ##'
 	@rm -f $(D)/static-assets.tar
 
-$(D)/static-assets.tar: $(BuildStylesList) $(BuildIconsList) $(BuildScriptsList)
+$(D)/static-assets.tar: $(BuildStylesList) $(BuildIconsList) $(BuildScriptsList) $(BuildFontsList)
 	@[ -d $(dir $@) ] || mkdir -p $(dir $@)
 	@docker run --rm --mount $(MountAssets) \
  --entrypoint "tar" $(PROXY_IMAGE) czfv - $(PROXY_HOME)/html &>/dev/null > $@
@@ -70,6 +71,18 @@ $(B)/$(DOMAIN)/static-assets/scripts/%.js.gz: static-assets/scripts/%.js
  docker run --rm --interactive --mount $(MountAssets) --entrypoint "sh" $(PROXY_IMAGE) \
  -c 'cat - > $(patsubst $(B)/%,html/%,$@) && cat $(patsubst $(B)/%,html/%,$@)' > $@
 
+###############
+###  FONTS  ###
+###############
+.PHONY: fonts
+fonts: $(BuildFontsList)
+
+$(B)/$(DOMAIN)/static-assets/fonts/%: static-assets/fonts/%
+	@echo "##[ $< ]##"
+	@[ -d $(dir $@) ] || mkdir -p $(dir $@)
+	@cat $< | \
+ docker run --rm --interactive --mount $(MountAssets) --entrypoint "sh" $(PROXY_IMAGE) \
+ -c 'cat - > $(patsubst $(B)/%,html/%,$@) && cat $(patsubst $(B)/%,html/%,$@)' > $@
 
 #############
 ### ICONS ###

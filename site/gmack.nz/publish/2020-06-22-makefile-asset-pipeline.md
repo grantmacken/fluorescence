@@ -1,7 +1,7 @@
 <!--
 {
   "name": "makefile asset pipeline",
-  "status": "created",
+  "status": "updated",
   "published": "2020-06-21+12:00",
   "type": "entry",
   "uid": "http://xq/gmack.nz/article/makefile-asset-pipeline",
@@ -9,12 +9,9 @@
 }
 -->
 
-## A Makefile Asset Pipeline
-
-I am not sure I like Make, but it is the build tool I use.
-Other build tools come and go out of fashion,
- but 'Make' is still used widely, is still being iteratively improved upon,
- and once you get the hang of it, it does what you tell it to do.
+I am not sure I like Make, but it is the build tool I use.  Other build tools come and go out of fashion, but 'Make' is
+still used widely, is still being iteratively improved upon, and once you get the hang of it, it does what you tell it
+to do.
 
 I use nginx to serve my 'static-assets'. 
 Below is a simplified version of my declarative nginx location block for serving my css stylesheets

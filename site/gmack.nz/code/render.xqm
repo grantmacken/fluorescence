@@ -1,5 +1,16 @@
 xquery version "3.1";
 module namespace render = "http://gmack.nz/#render";
+(:
+2 types of render templates 
+
+1. index templates
+   - home page     => render:home_index( $map )
+   - article index => render:article_index( $map )
+2. resource templates
+   - article resource => render:article( $map )
+
+
+:)
 
 declare
 function render:home_index( $map as map(*) ) as element() {
@@ -8,9 +19,8 @@ function render:home_index( $map as map(*) ) as element() {
     $map => render:head(),
     element body {
       $map => render:header(),
-      $map => render:nav-breadcrumb(),
+      $map => render:navbar(),
       element main {
-        attribute class { 'container' },
         element article  {
           attribute class { 'h-entry' },
           element h1 {
@@ -33,9 +43,8 @@ function render:article_index( $map as map(*) ) as element() {
     $map =>render:head(),
     element body {
       $map => render:header(),
-      $map => render:nav-breadcrumb(),
+      $map => render:navbar(),
       element main {
-        attribute class { 'container' },
         element article  {
           attribute class { 'h-entry' },
           element h1 {
@@ -58,9 +67,8 @@ function render:article( $map as map(*) ) as element() {
     $map =>render:head(),
     element body {
       $map => render:header(),
-      $map => render:nav-breadcrumb(),
+      $map => render:navbar(),
       element main {
-        attribute class { 'container' },
         element article  {
           attribute class { 'h-entry' },
           element h1 {
@@ -139,34 +147,6 @@ element ol {
 };
 
 declare
-function render:html( $map as map(*) ) as element() {
-  element html {
-    attribute lang {'en'},
-    render:head( $map ),
-    element body {
-      render:header( $map ),
-      render:nav-breadcrumb( $map ),
-      element main { 
-        attribute class { 'container' },
-        element article  {
-          attribute class { 'h-article' },
-          element h1 {
-            attribute class { 'p-name' },  
-            'title' },
-          element p { 
-            attribute class { 'p-summary' },
-            'summary' 
-            },
-          render:content( $map )
-         },
-        render:aside( $map )
-        },
-      render:footer( $map )
-    }
-  }
-};
-
-declare
 function render:head( $map as map(*) ) as element() {
 element head {
   element meta {
@@ -190,17 +170,12 @@ element head {
     attribute type { 'text/html' }
     },
   element link {
-    attribute href { '/styles/main' },
-    attribute rel { 'stylesheet' },
-    attribute type { 'text/css' }
+    attribute href { '/styles/fonts' },
+    attribute rel { 'preload' },
+    attribute as { 'style' }
     },
   element link {
-    attribute href { '/styles/lists' },
-    attribute rel { 'stylesheet' },
-    attribute type { 'text/css' }
-    },
-  element link {
-    attribute href { '/styles/prism' },
+    attribute href { '/styles/index' },
     attribute rel { 'stylesheet' },
     attribute type { 'text/css' }
     },
@@ -218,6 +193,7 @@ element head {
 declare
 function render:header( $map as map(*) ) as element() {
   element header {
+    attribute role { 'banner' },
     element img {
       attribute src { $map?author?logo },
       attribute width { '48' },
@@ -229,28 +205,36 @@ function render:header( $map as map(*) ) as element() {
 };
 
 declare
-function render:nav-breadcrumb( $map as map(*)) as element() {
+function render:navbar( $map as map(*)) as element() {
 element nav {
-  attribute aria-label { 'Breadcrumb' },
-  element ul {
-      attribute class { 'breadcrumb' },
-      ( $map?url => 
-        substring-after('://') =>
-        fn:tokenize('/')
-      ) =>
-      for-each( function( $item ) {
-        element li {
-            let $uStart := $map?url => substring-before( concat ('/', $item) )
-            let $url := $uStart || '/' || $item
-            return (
-              if ( $url eq $map?url ) 
-                then ( element span { attribute aria-current { 'page' }, $item } )
-              else ( element a { attribute href { $url }, $item } )
-              )
-           }
-        })
+  attribute class { 'nl' },
+    element ul {
+      attribute class { 'nl_menu' },
+      'todo'
+      },
+    element ul {
+      attribute class { 'nl_search' },
+      'todo'
+      },
+      element ul {
+          attribute class { 'nl_breadcrumb' },
+          ( $map?url => 
+            substring-after('://') =>
+            fn:tokenize('/')
+          ) =>
+          for-each( function( $item ) {
+            element li {
+                let $uStart := $map?url => substring-before( concat ('/', $item) )
+                let $url := $uStart || '/' || $item
+                return (
+                  if ( $url eq $map?url ) 
+                    then ( element span { attribute aria-current { 'page' }, $item } )
+                  else ( element a { attribute href { $url }, $item } )
+                  )
+              }
+            })
+      }
     }
-  }
 };
 
 declare
@@ -273,8 +257,8 @@ element aside {
       attribute id { 'articles' },
       ``[ other articles ]``  
       },
-    element ul { 
-      attribute class { 'vertical-list' },
+    element ul {
+      attribute class { 'nl nl_complementary' },
       $seqEntries => for-each(
          function ( $dbURI ) {
            let $item := $dbURI => db:get()

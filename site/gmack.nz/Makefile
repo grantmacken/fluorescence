@@ -33,6 +33,7 @@ Cross = echo -n "$$(tput setaf 1) ✘ $$(tput sgr0) " && echo -n $1
 .PHONY: build
 build: code assets
 	@$(if $(GITHUB_ACTIONS),,xdotool search --onlyvisible --name "Mozilla Firefox"  key  Control_L+F5 || true)
+	@#xdotool search --onlyvisible --name "Mozilla Firefox"  key  Control_L+F5 || true
 
 .PHONY: clean
 clean: clean-code clean-assets clean-scripts

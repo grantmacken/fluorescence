@@ -1,18 +1,15 @@
 #############
 ### POSTS ###
 #############
-ifeq ($(origin SLUG),undefined)
- SLUG := $(EMPTY)
-endif
-ifeq ($(origin PUBLISH),undefined)
- PUBLISH := $(EMPTY)
-endif
+
+# ifeq ($(origin PUBLISH),undefined)
+#  PUBLISH := $(EMPTY)
+# endif
 ifeq ($(origin INDEX),undefined)
  INDEX := $(EMPTY)
 endif
 
 BindMountDeploy  := type=bind,target=/tmp,source=$(abspath ../../deploy)
-
 PublishList := $(wildcard publish/*.md)
 PublishBuildList   := $(patsubst %.md,$(B)/%.json,$(PublishList))
 
@@ -28,18 +25,8 @@ COMMENT_OPEN := <!--
 BASE_URL  := http://$(XQ)/$(DOMAIN)
 POSTS_URL :=  $(BASE_URL)/_posts
 
-# calls
-#
-extractFM = sed -n '/^<!--/,/^-->/p;/^-->/q' $1  | sed -n '/^<!--/,/^-->/{//!p}'
-pubStatus  = $(shell $(call extractFM,$1) | \
-              jq -e '."status"')
-pubUid  = $(shell $(call extractFM,$1) | \
-              jq -e '."uid"')
-
 # header file
-extractHeader = $(shell grep -oP  '^$2: \K(.+)$$' $1)
 extractStatus = $(shell grep -oP  '^HTTP/1.1 \K(.+)$$' $1)
-# content is built locally
 
 .PHONY: publish
 publish: $(D)/xqerl-database.tar
@@ -47,7 +34,7 @@ publish: $(D)/xqerl-database.tar
 .PHONY: clean-publish
 clean-publish:
 	@echo '## $@ ##'
-	@#rm -fv $(wildcard $(B)/publish/*)
+	@rm -fv $(T)/publish/*
 	@rm -f $(D)/xqerl-database.tar
 
 $(D)/xqerl-database.tar: $(PublishBuildList)
@@ -63,13 +50,14 @@ db-tar-deploy:
  --entrypoint "tar" $(XQERL_IMAGE) - xvf /tmp/xqerl-database.tar -C /
 
 $(B)/publish/%.json: $(T)/publish/%.header
+	echo '##[ $< ]##'
 	[ -d $(dir $@) ] || mkdir -p $(dir $@)
-	case $(call pubStatus,publish/$(*).md) in
+	case "$(shell jq -rc '.status' $(T)/publish/$*.json)" in
 	'update')
 	  echo '## [ gcloud update ]##'
 	  $(Gscp) $(basename $<).xml $(GCE_NAME):~/publish/ &>/dev/null
-	  $(Gcmd) 'cat ~/publish/$(*).xml |
-		$(CURL) -s $(ctXML) $(SEND) -X PUT $(call pubUid,publish/$(*).md)' |
+	  $(Gcmd) "cat ~/publish/$(*).xml |
+		$(CURL) -s $(ctXML) $(SEND) -X PUT $(shell jq -rc '.uid' $(T)/publish/$*.json)" |
 	  jq -e '.' |
 	  tee $@
 	  echo "$$(awk '/"status": [^"]*"[^"]*"/ && !done \
@@ -86,7 +74,7 @@ $(B)/publish/%.json: $(T)/publish/%.header
     gsub ( /create/,"created"); done=1;}; 1;' publish/$(*).md | \
     awk '/"slug": [^"]*"[^"]*"/ && !done { \
     gsub (/"slug": [^"]*"[^"]*"/,\
-    "\"uid\": \"$(call extractHeader,$<,location)\"");\
+    "\"uid\": \"$(shell grep -oP  '^location: \K(.+)$$' $<)\"");\
     done=1;};1;')" > publish/$(*).md
 	  ;;
 	 *)
@@ -97,10 +85,14 @@ $(B)/publish/%.json: $(T)/publish/%.header
 $(T)/publish/%.header: $(T)/publish/%.xml
 	echo '##[ $< ]##'
 	[ -d $(dir $@) ] || mkdir -p $(dir $@)
-	case $(call pubStatus,publish/$(*).md) in
+	case "$(shell jq -rc '.status' $(T)/publish/$*.json)" in
 	 'update')
-	  echo '## [ local update ]##'
-	  cat $< | $(CURL) -s $(ctXML) $(SEND) $(OUT_HEADER) -X PUT $(call pubUid,publish/$(*).md) > $@
+		if ! jq --exit-status '.uid' $<  &>/dev/null
+	  then echo 'ERROR: JSON has no uid key' && false
+	  else
+		echo 'INFO: local update'
+	  fi
+	  cat $< | $(CURL) -s $(ctXML) $(SEND) $(OUT_HEADER) -X PUT $(shell jq -rc '.uid' $(T)/publish/$*.json) > $@
 	  xdotool search --onlyvisible --name "Mozilla Firefox"  key  Control_L+F5 || true
 	  ;;
 	 'create')
@@ -113,32 +105,31 @@ $(T)/publish/%.header: $(T)/publish/%.xml
 	  ;;
 	esac
 
-$(T)/publish/%.xml: publish/%.md
+$(T)/publish/%.xml: $(T)/publish/%.json
 	echo '##[ $< ]##'
-	[ -d $(dir $@) ] || mkdir -p $(dir $@)
-	if [ -z "$$(sed -n '/^<!--/,/^-->/p;/^-->/q' $<)" ]
-	then 
-	  echo 'ERROR: rontmatter block: check formating '
-	  echo ' - frontmatter should open and close with HTML comment'
-	  echo ' - frontmatter should contain well formed JSON object'
-	  false
+	echo "publish/$*.md:1: status:[ $(shell jq -rc '.status' $<) ]"
+	if ! jq --exit-status '.status' $<  &>/dev/null 
+	then echo 'ERROR: JSON has no status key' && false
+	else
+	echo "publish/$*.md:1: status:[ $(shell jq -rc '.status' $<) ]"
 	fi
-	sed -n '/^<!--/,/^-->/p;/^-->/q' $<  | sed -n '/^<!--/,/^-->/{//!p}' |
-	jq -e '.' > $(basename $@).json
-	# this is the quickfix errformat for vim
-	echo "$<:1: post status - $(call pubStatus,$<)"
-	case $(call pubStatus,$<) in
+	case "$(shell jq -rc '.status' $<)" in
 	 'update')
-	  cat $< | $(CMARK) > $@
+	  cat publish/$*.md | $(CMARK) > $@
 	  ;;
 	 'create')
-	  cat $< | $(CMARK) > $@
+	  cat publish/$*.md | $(CMARK) > $@
 	  ;;
-	 'fetch')
+	 *)
+	  touch $@
+	  ;;
+	esac
+
+sdsdsffffff:
 	  echo '## [ local fetch ]##'
 		# recreate frontmatter
 		echo '<!--' > $(basename $@).md
-	  cat $< | $(CURL) -s $(ACCEPT_JSON) $(call pubUid,$<) |
+	  cat $< | $(CURL) -s $(ACCEPT_JSON) $(call pubUid,$*) |
 		jq -e '.' |
 	  jq '.status = "fetched"' >> $(basename $@).md
 	  echo '-->' >> $(basename $@).md
@@ -146,10 +137,20 @@ $(T)/publish/%.xml: publish/%.md
 	  sed -ne '/^-->/,$${//!p}' $< >> $(basename $@).md
 		mv $(basename $@).md $<
 	  ;;
-	 *)
-	  touch $@
-	  ;;
-	esac
+
+$(T)/publish/%.json: publish/%.md
+	echo '##[ $< ]##'
+	[ -d $(dir $@) ] || mkdir -p $(dir $@)
+	if [ -z "$$(sed -n '/^<!--/,/^-->/p;/^-->/q' $<)" ]
+	then
+	  echo 'ERROR: frontmatter block: check formating '
+	  echo ' - frontmatter should open and close with HTML comment'
+	  echo ' - frontmatter should contain well formed JSON object'
+	  false
+	fi
+	sed -n '/^<!--/,/^-->/p;/^-->/q' $<  |
+	sed -n '/^<!--/,/^-->/{//!p}' |
+	jq -e '.' > $@
 
 #########################################
 
@@ -158,13 +159,12 @@ ct:
 	@echo '##[ $@ ]##'
 	@$(MAKE) new-index-page INDEX=home
 
-
 .PHONY: new-index-page
 new-index-page:
 	@$(if $(INDEX),, echo "usage: make INDEX='home':  you need to add INDEX" && false)
 	@$(file > publish/$(INDEX)-index.md,<!--)
 	@$(file >> publish/$(INDEX)-index.md,{)
-	@$(file >> publish/$(INDEX)-index.md,  "post-status" : "draft"$(COMMA))
+	@$(file >> publish/$(INDEX)-index.md,  "status" : "draft"$(COMMA))
 	@$(file >> publish/$(INDEX)-index.md,  "collection" : "$(INDEX)"$(COMMA))
 	@$(file >> publish/$(INDEX)-index.md,  "index" : "yep")
 	@$(file >> publish/$(INDEX)-index.md,})
@@ -185,13 +185,13 @@ new-article:
 	fi
 	echo "creating a new article[  $(call slug,$$line) ]"
 	echo '<!--' >  $(call slug,$$line)
-	echo "{ \"post-status\" : \"draft\"$(COMMA)\"slug\" : \"$$line\" }" |
+	echo "{ \"status\" : \"draft\"$(COMMA)\"slug\" : \"$$line\" }" |
 	jq -e '.' >>  $(call slug,$$line)
 	echo '-->'>>  $(call slug,$$line)
 	cat <<EOF | tee -a $(call slug,$$line)
 	In the frontmatter, you can
 	 * change the 'slug' value to create a page name.
-	 * change the 'post-status' value to 'create' when you are ready to publish
+	 * change the 'status' value to 'create' when you are ready to publish
 	EOF
 
 Gssh := gcloud compute ssh $(GCE_NAME) --zone=$(GCE_ZONE) --project $(GCE_PROJECT_ID)

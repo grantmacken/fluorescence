@@ -4,14 +4,23 @@ SHELL=/bin/bash
 .DELETE_ON_ERROR:
 MAKEFLAGS += --warn-undefined-variables
 MAKEFLAGS += --no-builtin-rules
+MAKEFLAGS += --silent
 include ../.env ../.version.env ../.gce.env
 include ../.inc/common.mk
 B := .build
 D := ../deploy
 
-gcTarList := xqerl-compiled-code xqerl-escripts static-assets nginx-configuration
-gcDeployTars := $(patsubst %,$(B)/deploy/%.tar,$(gcTarList))
+gcTarList := \
+  nginx-configuration \
+  static-assets \
+  nginx-configuration \
+  xqerl-escripts \
+  xqerl-compiled-code
+gcDeployTars := $(patsubst %,$(B)/deploy/%.txt,$(gcTarList))
 gcCopyCerts = docker cp $(NGX):$(1)/$(2).pem ./certs -L
+gcCompile = xqerl escript bin/scripts/compile.escript ./code/src/$1.xqm
+
+
 
 .PHONY: gc-deploy-tars
 gc-deploy-tars: $(gcDeployTars)
@@ -22,40 +31,57 @@ gc-clean:
 	@rm -fv $(B)/deploy/*
 	@rm -fv $(T)/deploy/*
 
-$(B)/xdeploy/%.txt: $(T)/xdeploy/%.toc
+
+
+
+$(B)/deploy/%.txt: $(T)/deploy/%.txt
 	@mkdir -p $(dir $@)
-	@echo '## $@ ##'
-	echo '$(basename $<)'
-	echo '$(*)'
-	@cat $(D)/$(*).tar | tar zft - > $(basename $<).txt
-	if cmp --print-bytes $< $(basename $<).txt &>/dev/null
-	then
-	echo 'good'
-	else
-	echo ''
-	fi
+	@echo ' - deploying $* tar on GCE host'
+	case $(*) in
+	'nginx-configuration')
+	  $(call gcDeploy-$(*)) > $@
+	  echo ' - on remote test nginx configuration'
+	  $(Gcmd) 'docker exec $(PROXY_CONTAINER_NAME) ./sbin/nginx -t'
+	  echo ' - on remote restart nginx'
+	  $(Gcmd) 'docker exec $(PROXY_CONTAINER_NAME) ./sbin/nginx -s reload'
+	  $(call Tick,[ $* ] - deployed )
+	  ;;
+	'xqerl-compiled-code')
+	  $(call gcDeploy-$(*)) > $@
+	  echo ' - on remote compile xQuery files' 
+	  echo -n ' ... ' &&
+		$(Gxq) '$(call gcCompile,newBase60)' && echo
+		echo -n ' ... ' &&
+		$(Gxq) '$(call gcCompile,maps)' && echo
+		echo -n ' ... ' &&
+		$(Gxq) '$(call gcCompile,req_res)' && echo
+		echo -n ' ... ' &&
+		$(Gxq) '$(call gcCompile,render)' && echo
+		echo -n ' ... ' &&
+		$(Gxq) '$(call gcCompile,posts)' && echo
+		echo -n ' ... ' &&
+		$(Gxq) '$(call gcCompile,routes)' && echo
+		@echo
+	  $(call Tick,[ $* ] - deployed )
+	  ;;
+	 *)
+	  $(call gcDeploy-$(*)) > $@
+	  $(call Tick,[ $* ] - deployed )
+	  ;;
+	esac
+	@echo
+# xqerl:compile(\"code/src/req_res.xqm\"),\
+# xqerl:compile(\"code/src/render.xqm\"),\
+# xqerl:compile(\"code/src/posts.xqm\"),\
+# xqerl:compile(\"code/src/routes.xqm\").
 
-$(B)/deploy/%.tar: $(D)/%.tar
-	echo '## $(*) ##'
-	mkdir -p $(dir $@)
-	echo 'copy $* tar onto GCE host'
+$(T)/deploy/%.txt: $(D)/%.tar
+	@echo '## $(*) ##'
+	@mkdir -p $(dir $@)
+	@echo ' - copying $* tar onto GCE host'
+	#$(Gcmd) 'rm -v deploy/$(*).tar'
 	$(Gscp) $(abspath $<) $(GCE_NAME):~/deploy/ &>/dev/null
-	$(Gcmd) 'ls -al $(patsubst $(D)/%,deploy/%,$(<))' 
-	$(call gcDeploy-$(*))
-	if [[ '$*' == 'xqerl-compiled-code' ]] 
-	then
-	$(Gxq) 'xqerl eval "$(xqOrderedCompile)"'
-	fi
-	if [[ '$*' == 'nginx-configuration' ]] 
-	then
-	echo ' - remote test nginx configuration'
-	$(Gcmd) 'docker exec $(PROXY_CONTAINER_NAME) ./sbin/nginx -t'
-	echo ' - remote restart'
-	$(Gcmd) 'docker exec $(PROXY_CONTAINER_NAME) ./sbin/nginx -s reload'
-	fi
-	@# cat $(T)/deploy/$(notdir $<) | tar zft - > $@
-	@cp $< $@
-
+	$(Gcmd) 'ls -al deploy/$(*).tar' &> $@
 
 .PHONY: gc-xq-up
 gc-xq-up:
