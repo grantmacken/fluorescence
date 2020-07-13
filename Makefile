@@ -121,12 +121,12 @@ clean-routes:
 	@popd &>/dev/null
 
 ## will error if error
-.PHONY: watch
-watch:
-	@pushd site/$(DOMAIN) &>/dev/null
-	@while true; do $(MAKE) || true;  \
- inotifywait -qre close_write .  &>/dev/null; done
-	@popd &>/dev/null
+# .PHONY: watch
+# watch:
+# @pushd site/$(DOMAIN) &>/dev/null
+# while true; do $(MAKE) || true;  \
+# inotifywait -qre close_write .  &>/dev/null; done
+# popd &>/dev/null
 
 .PHONY: watch-code
 watch-code:
