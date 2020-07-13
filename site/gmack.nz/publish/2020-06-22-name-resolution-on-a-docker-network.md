@@ -21,7 +21,7 @@ docker exec xq nslookup twitter.com
 
 The reply from 
 
-```bash
+```
 # docker exec xq nslookup ngx.wrk
 Server:         127.0.0.11
 Address:        127.0.0.11:53
@@ -35,7 +35,7 @@ Address: 172.18.0.3
 
 This is telling me docker runs it own internal network
 dns resolution service at `127.0.0.11`.
-Although I am am running an exec a command on **xq**
+Although I am running an exec a command on **xq**
 the resolution service **xq** uses knows other container name and IP addresses
 on the internal docker network. The IP Address '172.18.0.3' is
 in the range ( 172.16.0.0 - 172.31.255.255 ) that is not directly connected to the internet.
