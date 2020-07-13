@@ -1,18 +1,15 @@
 #############
 ### POSTS ###
 #############
-ifeq ($(origin SLUG),undefined)
- SLUG := $(EMPTY)
-endif
-ifeq ($(origin PUBLISH),undefined)
- PUBLISH := $(EMPTY)
-endif
+
+# ifeq ($(origin PUBLISH),undefined)
+#  PUBLISH := $(EMPTY)
+# endif
 ifeq ($(origin INDEX),undefined)
  INDEX := $(EMPTY)
 endif
 
 BindMountDeploy  := type=bind,target=/tmp,source=$(abspath ../../deploy)
-
 PublishList := $(wildcard publish/*.md)
 PublishBuildList   := $(patsubst %.md,$(B)/%.json,$(PublishList))
 
@@ -28,16 +25,8 @@ COMMENT_OPEN := <!--
 BASE_URL  := http://$(XQ)/$(DOMAIN)
 POSTS_URL :=  $(BASE_URL)/_posts
 
-# calls
-#
-extractFM = sed -n '/^<!--/,/^-->/p;/^-->/q' $1  | sed -n '/^<!--/,/^-->/{//!p}' | jq -e '.'
-pubStatus  = $(shell jq -r '."status"' $(T)/publish/$(1).json )
-pubUid  = $(shell jq -r '."uid"' $(T)/publish/$(1).json )
-
 # header file
-extractHeader = $(shell grep -oP  '^$2: \K(.+)$$' $1)
 extractStatus = $(shell grep -oP  '^HTTP/1.1 \K(.+)$$' $1)
-# content is built locally
 
 .PHONY: publish
 publish: $(D)/xqerl-database.tar
@@ -85,7 +74,7 @@ $(B)/publish/%.json: $(T)/publish/%.header
     gsub ( /create/,"created"); done=1;}; 1;' publish/$(*).md | \
     awk '/"slug": [^"]*"[^"]*"/ && !done { \
     gsub (/"slug": [^"]*"[^"]*"/,\
-    "\"uid\": \"$(call extractHeader,$<,location)\"");\
+    "\"uid\": \"$(shell grep -oP  '^location: \K(.+)$$' $<)\"");\
     done=1;};1;')" > publish/$(*).md
 	  ;;
 	 *)
@@ -163,40 +152,12 @@ $(T)/publish/%.json: publish/%.md
 	sed -n '/^<!--/,/^-->/{//!p}' |
 	jq -e '.' > $@
 
-xxxdswww:
-	# this is the quickfix errformat for vim
-	echo "$<:1: post status - $(call pubStatus,$<)"
-	case $(call pubStatus,$<) in
-	 'update')
-	  cat $< | $(CMARK) > $@
-	  ;;
-	 'create')
-	  cat $< | $(CMARK) > $@
-	  ;;
-	 'fetch')
-	  echo '## [ local fetch ]##'
-		# recreate frontmatter
-		echo '<!--' > $(basename $@).md
-	  cat $< | $(CURL) -s $(ACCEPT_JSON) $(call pubUid,$<) |
-		jq -e '.' |
-	  jq '.status = "fetched"' >> $(basename $@).md
-	  echo '-->' >> $(basename $@).md
-	  # extract markdown body
-	  sed -ne '/^-->/,$${//!p}' $< >> $(basename $@).md
-		mv $(basename $@).md $<
-	  ;;
-	 *)
-	  touch $@
-	  ;;
-	esac
-
 #########################################
 
 .PHONY: ct
 ct:
 	@echo '##[ $@ ]##'
 	@$(MAKE) new-index-page INDEX=home
-
 
 .PHONY: new-index-page
 new-index-page:
