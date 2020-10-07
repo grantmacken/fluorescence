@@ -23,7 +23,7 @@ transfer    [ %{time_starttransfer} ] transfer start \n\
 tansfered   [ %{time_total} ] total transfered '
 
 .PHONY: check-xq-routes
-check-xq-routes: home-page
+check-xq-routes: clean-routes home-page
 
 .PHONY: check-xq-routes-more
 check-xq-routes-more: home-page-more
@@ -41,7 +41,7 @@ xxx:
 	@$(call HasHeaderKeyShowValue,$(dir $<)/headers-$(notdir $<),content-type)
 
 .PHONY: home-page-more
-home-page-more: $(T)/check_route/home-page
+home-page-more: $(B)/check_route/home/index
 	@echo 'check route [ $@ ]'
 	@echo;printf %60s | tr ' ' '-' && echo
 	@cat $<
@@ -57,11 +57,11 @@ $(B)/check_route/home/index:
 	mkdir -p $(dir $@)
 	$(CURL) --silent --show-error \
  --write-out %{json} -o /dev/null \
- http://xq/$(DOMAIN)/home/index | jq '.' > $@.json
+ http://xq/$(DOMAIN)/home/index | jq '.' | tee $@.json
 	$(CURL) --silent --show-error \
  --dump-header - -o /dev/null \
- http://xq/$(DOMAIN)/home/index > $@.header
-	$(CURL) --silent --show-error http://xq/$(DOMAIN)/home/index > $@.html
+ http://xq/$(DOMAIN)/home/index | tee $@.header
+	$(CURL) --silent --show-error http://xq/$(DOMAIN)/home/index | tee $@.html
 	touch $@
 
 ##########################################

@@ -288,7 +288,7 @@ nginx-configuration-tar-deploy:
 
 .PHONY: pull-pkgs
 pull-pkgs:
-	#docker pull curlimages/curl:latest
+	@docker pull curlimages/curl:latest
 	@echo $(ghToken) | docker login docker.pkg.github.com --username $(REPO_OWNER) --password-stdin
 	@docker pull $(XQERL_DOCKER_IMAGE):$(XQ_VER)
 	@docker pull $(PROXY_DOCKER_IMAGE):$(NGX_VER)
@@ -350,6 +350,13 @@ certs-clean:
 #  GCLOUD targets
 #  prefix gc
 
+.PHONY: gc-db
+gc-db:
+	@pushd gcloud &>/dev/null
+	@$(MAKE) $@
+	@popd &>/dev/null
+
+
 .PHONY: gc-deploy
 gc-deploy:
 	@pushd gcloud &>/dev/null
@@ -370,6 +377,12 @@ gc-clean:
 
 .PHONY: gc-xq-up
 gc-xq-up:
+	@pushd gcloud &>/dev/null
+	@$(MAKE) $@
+	@popd &>/dev/null
+
+.PHONY: gc-code
+gc-code:
 	@pushd gcloud &>/dev/null
 	@$(MAKE) $@
 	@popd &>/dev/null

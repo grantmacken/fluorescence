@@ -31,7 +31,19 @@ gc-clean:
 	@rm -fv $(B)/deploy/*
 	@rm -fv $(T)/deploy/*
 
-
+.PHONY: gc-db
+gc-db:
+	@echo '## $@) ##'
+	@#echo ' -  stopping xquery application server'
+	@#$(MAKE) gc-xq-stop
+	@#$(Gcmd) 'mv -v ./deploy/xqerl-database.tar ./deploy/$$(date --iso)-xqerl-database.tar'
+	@# $(Gcmd) 'docker run --rm --mount $(MountData) --entrypoint "tar" $(XQERL_DOCKER_IMAGE) czfv - $(XQERL_HOME)/data'
+	@$(Gcmd) \
+'docker run --rm --mount $(MountData) --entrypoint "tar" $(XQERL_DOCKER_IMAGE):$(XQ_VER) czfv - $(XQERL_HOME)/data' > $(D)/$$(date --iso)-xqerl-database.tar
+	@#echo ' -  starting xquery application server'
+	@#$(MAKE) gc-xq-up
+	@#echo ' -  compiling xquery application code'
+	@#$(MAKE) gc-code
 
 
 $(B)/deploy/%.txt: $(T)/deploy/%.txt
@@ -155,6 +167,7 @@ cb-ini: $(B)/cli.ini
 define certbotConfig
 rsa-key-size = 2048
 email = $(GIT_EMAIL)
+cert-name=$(TLS_COMMON_NAME)
 domains = $(DOMAINS)
 text = true
 authenticator = webroot
@@ -249,9 +262,9 @@ certs-into-vol: certs-to-host
  --mount $(MountLetsencrypt) \
  --mount type=bind,target=/tmp,source=$(CURDIR)/certs \
  --entrypoint "sh" $(PROXY_IMAGE) -c \
- 'mkdir -p  $(LETSENCRYPT)/live/$(TLS_COMMON_NAME) \
+ 'mkdir -p  $(LETSENCRYPT)/live/$(TLS_CERT_NAME) \
  && mv /tmp/dh-param.pem $(LETSENCRYPT)/ \
- && cp /tmp/* $(LETSENCRYPT)/live/$(TLS_COMMON_NAME)/ \
+ && cp /tmp/* $(LETSENCRYPT)/live/$(TLS_CERT_NAME)/ \
  && rm -fv /tmp/*.pem'
 	@printf %60s | tr ' ' '-' && echo
 
@@ -259,10 +272,10 @@ certs-into-vol: certs-to-host
 certs-to-host:
 	@echo ' - on GCE in the running ngx container copy certs into certs dir' 
 	@$(Gcmd) 'mkdir -p certs \
- && $(call gcCopyCerts,$(LETSENCRYPT)/live/$(TLS_COMMON_NAME),cert)  \
- && $(call gcCopyCerts,$(LETSENCRYPT)/live/$(TLS_COMMON_NAME),fullchain)  \
- && $(call gcCopyCerts,$(LETSENCRYPT)/live/$(TLS_COMMON_NAME),chain)  \
- && $(call gcCopyCerts,$(LETSENCRYPT)/live/$(TLS_COMMON_NAME),privkey)  \
+ && $(call gcCopyCerts,$(LETSENCRYPT)/live/$(TLS_CERT_NAME),cert)  \
+ && $(call gcCopyCerts,$(LETSENCRYPT)/live/$(TLS_CERT_NAME),fullchain)  \
+ && $(call gcCopyCerts,$(LETSENCRYPT)/live/$(TLS_CERT_NAME),chain)  \
+ && $(call gcCopyCerts,$(LETSENCRYPT)/live/$(TLS_CERT_NAME),privkey)  \
  && $(call gcCopyCerts,$(LETSENCRYPT),dh-param) \
  && ls -al ./certs'
 	@echo ' - secure copy extracted containers certs into local certs directory' 
@@ -271,7 +284,11 @@ certs-to-host:
 .PHONY: certs-check
 certs-check:
 	@echo ' - recursive list of files on nxg server running on gcloud'
-	@$(Gngx) 'ls -al $(LETSENCRYPT)/live/$(TLS_COMMON_NAME)'
+	@$(Gngx) 'ls -alR $(LETSENCRYPT)/live'
+	@$(Gngx) 'cat $(LETSENCRYPT)/live/README'
+
+
+dfdf:
 	@docker run --rm \
  --mount $(MountLetsencrypt) \
  --entrypoint "ls" $(PROXY_IMAGE) -alR  $(LETSENCRYPT)

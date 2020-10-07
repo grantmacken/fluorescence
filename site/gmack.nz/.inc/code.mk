@@ -4,17 +4,15 @@
 #   req_res render posts login routes
 ModuleList := newBase60 maps req_res render posts routes
 # render_feed render_note micropub routes
-CodeBuildList  := $(patsubst %,$(B)/code/%.xqm,$(ModuleList))
+CodeBuildList  := $(patsubst %,$(B)/code/src/%.xqm,$(ModuleList))
 
 compiledLibs := 'BinList = xqerl_code_server:library_namespaces(),\
  NormalList = [binary_to_list(X) || X <- BinList],\
  io:fwrite("~1p~n",[lists:sort(NormalList)]).'
-
 #  EXPANSIONS
 DEX := docker exec $(XQ)
 EVAL := $(DEX) xqerl eval
 ESCRIPT := $(DEX) xqerl escript
-
 # CALLS
 compile =  $(ESCRIPT) bin/scripts/compile.escript ./code/src/$1
 
@@ -41,23 +39,14 @@ $(D)/xqerl-compiled-code.tar: $(CodeBuildList)
 	$(call Tick, '- [ $(basename $(notdir $@)) ] tarred ')
 	@echo;printf %60s | tr ' ' '-' && echo
 
-# $(T)/compile_result/%.txt 
-
-$(B)/code/%.xqm: $(T)/compile_result/%.txt
+$(B)/code/src/%.xqm: code/%.xqm
 	@mkdir -p $(dir $@)
-	@$(call GrepOK,':I:',$<) || ( cat $< && echo )
-	@$(call IsOK,':I:',$<,compiled)
-	@#docker cp $(XQ):$(XQERL_HOME)/code/src/$(notdir $@) $(dir $@)
-	@#$(DEX) ls -al $(XQERL_HOME)/code/src/$(notdir $@)
-	@$(DEX) cat $(XQERL_HOME)/code/src/$(notdir $@) > $@
-	@# leave src $(DEX) rm $(XQERL_HOME)/code/src/$(notdir $@)
+	@#echo '##[ $< ]##'
+	@#NOTE: docker copy set permissions as USER whereas cat method results in root user 
+	@docker cp $(<) $(XQ):$(XQERL_HOME)/$(dir $(patsubst $(B)/%,%,$@))
+	@$(call compile,$(notdir $<)) > $(T)/compile_result/$*.txt
+	@$(call GrepOK,':I:',$(T)/compile_result/$*.txt) || ( cat $(T)/compile_result/$*.txt && echo )
+	@$(call IsOK,':I:',$(T)/compile_result/$*.txt,compiled)
+	@cp $< $@
 
-# .PRECIOUS: $(C)/code/%.txt
-$(T)/compile_result/%.txt: code/%.xqm
-	@mkdir -p $(dir $@)
-	@docker cp $(<) $(XQ):$(XQERL_HOME)/code/src
-	@$(call compile,$(notdir $<)) > $@
-	@#check: xqerl can compile
-	@# check: routes do not return 500 status
-	@# $(MAKE) -silent routes 
 

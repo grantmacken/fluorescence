@@ -7,9 +7,8 @@ escript:  $(D)/xqerl-escripts.tar
 
 .PHONY: clean-escript
 clean-escript:
-	@rm -v $(D)/xqerl-escripts.tar
-	@rm -v $(EscriptBuildList)
-
+	@rm -vf $(D)/xqerl-escripts.tar
+	@rm -vf $(EscriptBuildList)
 
 $(D)/xqerl-escripts.tar: $(EscriptBuildList)
 		@docker run --rm \
@@ -21,11 +20,7 @@ $(D)/xqerl-escripts.tar: $(EscriptBuildList)
 
 $(B)/bin/scripts/%: bin/%
 	@mkdir -p $(dir $@)
-	@cp $< $@
-	@docker run --rm \
- --mount $(MountEscripts) \
- --mount $(BindMountBuild) \
- --entrypoint "sh" $(XQERL_IMAGE) -c 'cp -v /tmp/$(patsubst $(B)/%,%,$@) $(dir $(patsubst $(B)/%,%,$@))'
-	@echo;printf %60s | tr ' ' '-' && echo
-	@#docker cp $(<) $(XQ):$(XQERL_HOME)/bin/scripts/
-
+	@#echo '##[ $* ]##'
+	@cat $< | \
+ docker run --rm --interactive --mount $(MountEscripts) --entrypoint "sh" $(XQERL_IMAGE) \
+ -c 'cat - > $(patsubst $(B)/%,%,$@) && cat $(patsubst $(B)/%,%,$@)' > $@

@@ -13,8 +13,6 @@ compiledLibs := 'BinList = xqerl_code_server:library_namespaces(),\
  NormalList = [binary_to_list(X) || X <- BinList],\
  io:fwrite("~1p~n",[lists:sort(NormalList)]).'
 
-
-
 ####################
 ### XQERL UP DOWN ##
 ####################
