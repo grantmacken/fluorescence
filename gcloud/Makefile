@@ -167,7 +167,7 @@ cb-ini: $(B)/cli.ini
 define certbotConfig
 rsa-key-size = 2048
 email = $(GIT_EMAIL)
-cert-name=$(TLS_COMMON_NAME)
+cert-name=$(TLS_CERT_NAME)
 domains = $(DOMAINS)
 text = true
 authenticator = webroot
