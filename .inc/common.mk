@@ -39,7 +39,8 @@ gcDeploy = $(Gcmd) 'docker run --rm \
  --entrypoint "tar" $(2) xvf /tmp/$(3).tar -C /'
 
 # shotcut var expansion
-Gssh := gcloud compute ssh $(GCE_NAME) --zone=$(GCE_ZONE) --project $(GCE_PROJECT_ID)
+HOST := $(GCE_NAME)@$(GCE_NAME)
+Gssh := gcloud compute ssh $(HOST) --zone=$(GCE_ZONE) --project $(GCE_PROJECT_ID)
 Gcmd := $(Gssh) --command
 Gxq  := $(Gssh) --container $(XQ) --command
 Gngx := $(Gssh) --container $(NGX) --command
