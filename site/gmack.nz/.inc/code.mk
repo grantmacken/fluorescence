@@ -27,7 +27,7 @@ PHONY: clean-code
 clean-code:
 	@echo '## $@ ##'
 	@rm -fv $(D)/xqerl-compiled-code.tar
-	@rm -fv $(B)/code/*
+	@rm -fv $(B)/code/src/*
 	@rm -fv $(T)/compile_result/*
 
 $(D)/xqerl-compiled-code.tar: $(CodeBuildList)
